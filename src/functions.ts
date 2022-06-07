@@ -77,42 +77,29 @@ async function getReturnFromHTML(url:string) {
     return global_return
 }
 
-async function logHtmlTable(pair:string, interval:string, delay:number=10, exchange:Exchange=defaultExchange, noFile:boolean=false) {
+async function logJsonTable(pair:string, interval:string, delay:number=10, exchange:Exchange=defaultExchange) {
 
     const date = new Date() // Creating a date object
 
-    const fileName = `output/${pair}_${interval}_${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}.html` // We generate a file name in the output folder, with some info such as the pair, the TradingView interval and the date
+    const fileName = `output/${pair}_${interval}_${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}.jsonc` // We generate a file name in the output folder, with some info such as the pair, the TradingView interval and the date
 
-    const head = `
-        <!-- Filename : ${fileName} -->
-        <script src="script.js" defer></script>
-        <h2>Current pair : ${pair} | Interval : ${interval}</h2>
-        <table>
-            <thead>
-                <td>Prix</td>
-                <td>Recommendation</td>
-            </thead>
-        ` // Head of the html file, with info and the client script tag
+    const head = `/* File : ${fileName} */ [` // Head of the html file, with info
 
-    console.log(head) // Log the head in the console
-
-    if (!noFile) { // If the noFile value is false (if we want a file)
-        writeFile(fileName,head) // We create the file (replacing if one already exists), with the head as content
-    }
+    writeFile(fileName,head) // We create the file (replacing if one already exists), with the head as content
 
     setInterval(async () => { // We repeat the following forever, with a delay
 
-        let row = `
-            <tr>
-                <td>${await getLastPrice(pair, exchange)}</td>
-                <td>${await getIndicator(pair,interval)}</td>
-            </tr>
-        ` // Every row of the table
+        let row = {
+            "pair": pair,
+            "interval": interval,
+            "unix_time": date.getTime(),
+            "price": await getLastPrice(pair, exchange),
+            "signal": await getIndicator(pair, interval)
+        }
+    
         console.log(row) // We log the row
 
-        if (!noFile) { // If we want a file
-            appendFile(fileName,row) // We add to the previously created file (with the file name) the row
-        }
+        appendFile(fileName,JSON.stringify(row)+`,`) // We add to the previously created file (with the file name) the row
 
     }, delay*1000) // We set the delay, converting it from seconds to milliseconds
 }
@@ -121,5 +108,5 @@ export {
     getIndicator,
     getLastPrice,
     getReturnFromHTML,
-    logHtmlTable
+    logJsonTable
 }
