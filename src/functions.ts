@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer"
 import { Exchange } from "ccxt"
 import { defaultExchange } from './exchanges'
-import { writeFile, appendFile } from './tools'
+import { writeFile, appendFile, readJsoncOutputFile } from './tools'
 
 /**
  * Returns a string indicator ("BUY","SELL","NEUTRAL","STRONG BUY","STRONG SELL") from TradingView's widget
@@ -104,9 +104,102 @@ async function logJsonTable(pair:string, interval:string, delay:number=10, excha
     }, delay*1000) // We set the delay, converting it from seconds to milliseconds
 }
 
+function analyseJsonTable(pathToJsoncFile: string, inverted:boolean=false): Object|void {
+    
+    const data = readJsoncOutputFile(pathToJsoncFile) as Array<any>
+
+    let first_price, last_price, absolute_first_price;
+
+    let benefice_global = []
+
+    for (let i = 1; i < data.length; i++) {
+
+        let row = data[i];
+        let nextRow = data[i + 1]
+    
+        if (nextRow == undefined)
+            break
+        
+        let prix = {
+            current: row.price,
+            next: nextRow.price
+        }
+        let recommendation = {
+            current: row.signal,
+            next: nextRow.signal
+        }
+    
+        if (i == 1) {
+            first_price = prix.current
+            absolute_first_price = prix.current
+        }
+    
+        if (recommendation.current == recommendation.next) {
+            continue
+        } else {
+            last_price = prix.current
+            let benef
+    
+            switch (recommendation.current) {
+                case "BUY":
+                    benef = last_price - first_price
+                    break
+                case "STRONG BUY":
+                    benef = (last_price - first_price) * 2
+                    break
+                case "NEUTRAL":
+                    benef = 0
+                    break
+                case "SELL":
+                    benef = (last_price - first_price) * (-1)
+                    break
+                case "STRONG SELL":
+                    benef = (last_price - first_price) * (-2)
+                    break
+                default:
+                    benef = 0
+                    break
+            }
+    
+            benefice_global.push(benef)
+    
+            first_price = prix.next
+            last_price = undefined
+            continue
+        }
+    
+    }
+
+
+    try {
+        let benefice_sum = benefice_global.reduce((previousValue, currentValue) => previousValue + currentValue)
+        let benefice_var = ((benefice_global.reduce((previousValue, currentValue) => previousValue + currentValue)/absolute_first_price)* 100) // in %
+        
+        if (inverted) {
+            benefice_global = benefice_global.map(num => -1 * num)
+            benefice_sum = -1 * benefice_sum
+            benefice_var = -1 * benefice_var
+        }
+
+        const results = {
+            array: benefice_global,
+            sum: benefice_sum,
+            var: benefice_var+'%'
+        }
+    
+        return results
+
+    } catch (e) {
+        console.log("There is no change of signal in the given jsonc file. Therefore, it isn't possible to calculate a profit.")
+    }
+
+}
+
+
 export {
     getIndicator,
     getLastPrice,
     getReturnFromHTML,
-    logJsonTable
+    logJsonTable,
+    analyseJsonTable
 }
