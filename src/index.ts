@@ -1,14 +1,7 @@
-import { getLastPrice, getIndicator, logJsonTable } from './functions'
+import { getLastPrice, getIndicator, logJsonTable, analyseJsonTable } from './functions'
+import { readFile, readJsonFile, readJsoncOutputFile } from './tools'
 
 (async () => {
-
-    await logJsonTable("ETHUSDT","1m",1)
-
-    // const coin = "ETH"
-
-    // setInterval(async () => {
-    //     console.log(`Coin : ${coin} | Signal : ${await getIndicator(`${coin}USDT`, "1m")} | Price : ${await getLastPrice(`${coin}USDT`)}`)
-
-    // }, 1000)
+    console.log(analyseJsonTable("./output/BTCUSDT_5m_23-1-2022.jsonc",true))
     
 })()
