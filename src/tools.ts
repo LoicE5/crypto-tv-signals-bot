@@ -16,6 +16,41 @@ function appendFile(path:string, content:any, consoleStatus:boolean=false):void 
     })
 }
 
+function readFile(path: string): string {
+    return fs.readFileSync(path,{encoding:'utf8'})
+}
+
+function readJsonFile(path: string): Object {
+    let fileContent = readFile(path)
+    return parseJsonc(fileContent)
+}
+
+function removeCommentsFromString(input: string) {
+    return input.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '')
+}
+
+function parseJsonc(jsoncString: string) {
+    return JSON.parse(jsoncString.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, ''))
+}
+
+function replaceTrailingCommaFromJsonString(jsonString: string, newChar: string): string {
+    let latestChar = jsonString.charAt(jsonString.length - 1)
+    
+    if (latestChar != ",")
+        return jsonString
+    
+    return jsonString.replace(/.$/,newChar)
+}
+
+function readJsoncOutputFile(path: string): Array<Object> { // Specific
+
+    let fileContent = readFile(path)
+    fileContent = removeCommentsFromString(fileContent)
+    fileContent = replaceTrailingCommaFromJsonString(fileContent, ']')
+    
+    return JSON.parse(fileContent)
+}
+
 function isJsonString(str:string):boolean {
     try {
         JSON.parse(str);
@@ -41,5 +76,10 @@ export {
     appendFile,
     isJsonString,
     isArray,
-    isNull
+    isNull,
+    readFile,
+    readJsonFile,
+    parseJsonc,
+    removeCommentsFromString,
+    readJsoncOutputFile
 }
