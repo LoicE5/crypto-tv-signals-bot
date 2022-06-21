@@ -71,6 +71,19 @@ function isNull(input:any):boolean {
         return false
 }
 
+function getValueFromArgv(param: string, argv: Array<string>): string|boolean {
+    
+    for (let arg of argv) { // For every arg of the array
+        if (arg.includes(param))// If the current arg contains the given substring
+            return arg.replace(`${param}=`, '') // Return the value of the arg minus the substring
+    }
+    return false
+}
+
+function isArgv(param: string, argv: Array<string>): boolean {
+    return argv.includes(param) || argv.includes(`${param}=true`)
+}
+
 export {
     writeFile,
     appendFile,
@@ -81,5 +94,7 @@ export {
     readJsonFile,
     parseJsonc,
     removeCommentsFromString,
-    readJsoncOutputFile
+    readJsoncOutputFile,
+    getValueFromArgv,
+    isArgv
 }

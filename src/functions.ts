@@ -8,7 +8,7 @@ import { writeFile, appendFile, readJsoncOutputFile } from './tools'
  * @param pair The pair we want to get the indicator from (like "BTCUSDT")
  * @param interval The interval (1 minute, 1 hour, 1 day...) we want the indicator to be calculated on
  * @param platform The platform we want to use as TradingView's data source (default is "BINANCE", caps string only)
- * @returns 
+ * @returns The indicator string from tradingview, or "ERROR in case of fail"
  */
 async function getIndicator(pair:string, interval:string="1m", platform:string="BINANCE") {
 
@@ -55,6 +55,12 @@ async function getIndicator(pair:string, interval:string="1m", platform:string="
 
 }
 
+/**
+ * Returns the price of the given cryptocurrencies
+ * @param pair The pair we want to get the price from (like "BTCUSDT")
+ * @param exchange Echange CCXT object that will be used to fetch the price (default is an instance of Binance)
+ * @returns The price as a float
+ */
 async function getLastPrice(pair:string, exchange:Exchange=defaultExchange) {
 
     let info = await exchange.fetchTicker(pair)
@@ -63,20 +69,13 @@ async function getLastPrice(pair:string, exchange:Exchange=defaultExchange) {
     return price
 }
 
-async function getReturnFromHTML(url:string) {
-    const browser = await puppeteer.launch()
-    const page = await browser.newPage()
-    await page.goto(url)
-
-    const global_return = await page.evaluate(() => {
-        return JSON.parse((<HTMLElement>document.documentElement.querySelector('p#results')!).innerText)
-    })
-
-    await browser.close()
-
-    return global_return
-}
-
+/**
+ * Create a .jsonc file with a comment header and an empty array, that is periodically filled with JSON objects, each containing the signal and price of a cryptocurrency pair as well as the corresponding UNIX date.
+ * @param pair The pair we want to get the data from (like "BTCUSDT")
+ * @param delay The delay between each fetch to the exchange and TradingView's widget, therefore between each JSON object insertion
+ * @param exchange Echange CCXT object that will be used to fetch the price (default is an instance of Binance)
+ * @returns The price as a float
+ */
 async function logJsonTable(pair:string, interval:string, delay:number=10, exchange:Exchange=defaultExchange) {
 
     const date = new Date() // Creating a date object
@@ -92,7 +91,7 @@ async function logJsonTable(pair:string, interval:string, delay:number=10, excha
         let row = {
             "pair": pair,
             "interval": interval,
-            "unix_time": date.getTime(),
+            "unix_time": Date.now(),
             "price": await getLastPrice(pair, exchange),
             "signal": await getIndicator(pair, interval)
         }
@@ -104,13 +103,19 @@ async function logJsonTable(pair:string, interval:string, delay:number=10, excha
     }, delay*1000) // We set the delay, converting it from seconds to milliseconds
 }
 
-function analyseJsonTable(pathToJsoncFile: string, inverted:boolean=false): Object|void {
+/**
+ * Takes a .json or .jsonc file path as input and generates estimated ROI based on the data provided. Meant to be used after using the logJsonTable() function
+ * @param pathToJsoncFile String representing the absolute or relative path to the JSON file we want to analyze
+ * @param inverted Boolean that inverts the trades (short when BUY, and long when SELL), and calculates the profits accorgingly
+ * @returns An object returning the profit of each transaction, the sum of profits and the percentage of variation (all calculated considering operations on 1 unit of the given coin)
+ */
+function analyseJsonTable(pathToJsoncFile: string, inverted:boolean=false): object|void {
     
     const data = readJsoncOutputFile(pathToJsoncFile) as Array<any>
 
     let first_price, last_price, absolute_first_price;
 
-    let benefice_global = []
+    let global_profit = []
 
     for (let i = 1; i < data.length; i++) {
 
@@ -161,7 +166,7 @@ function analyseJsonTable(pathToJsoncFile: string, inverted:boolean=false): Obje
                     break
             }
     
-            benefice_global.push(benef)
+            global_profit.push(benef)
     
             first_price = prix.next
             last_price = undefined
@@ -172,19 +177,19 @@ function analyseJsonTable(pathToJsoncFile: string, inverted:boolean=false): Obje
 
 
     try {
-        let benefice_sum = benefice_global.reduce((previousValue, currentValue) => previousValue + currentValue)
-        let benefice_var = ((benefice_global.reduce((previousValue, currentValue) => previousValue + currentValue)/absolute_first_price)* 100) // in %
+        let profit_sum = global_profit.reduce((previousValue, currentValue) => previousValue + currentValue)
+        let profit_var = ((global_profit.reduce((previousValue, currentValue) => previousValue + currentValue)/absolute_first_price)* 100) // in %
         
         if (inverted) {
-            benefice_global = benefice_global.map(num => -1 * num)
-            benefice_sum = -1 * benefice_sum
-            benefice_var = -1 * benefice_var
+            global_profit = global_profit.map(num => -1 * num)
+            profit_sum = -1 * profit_sum
+            profit_var = -1 * profit_var
         }
 
         const results = {
-            array: benefice_global,
-            sum: benefice_sum,
-            var: benefice_var+'%'
+            profit_per_transaction: global_profit,
+            sum: profit_sum,
+            var: profit_var+'%'
         }
     
         return results
@@ -195,11 +200,36 @@ function analyseJsonTable(pathToJsoncFile: string, inverted:boolean=false): Obje
 
 }
 
+/**
+ * Returns true if the given interval string is valid, or false otherwise
+ * @param interval The interval string we want to verify
+ * @returns A boolean that states if the interval is correct or isn't
+ */
+function isValidInterval(interval: string): boolean {
+    const valid_interval = ['1m', '5m', '15m', '30m', '1h', '2h', '4h', '1D', '1W', '1M']
+    return valid_interval.includes(interval)
+}
+
+/**
+ * Check if a pair is valid by returning true if it is and false if it isn't. Works by trying to fetch the price of the given pair string and returning false in case of any exception
+ * @param pair The pair string we want to test
+ * @returns A boolean that confirms or not the condition
+ */
+async function isPairValid(pair:string){
+    try {
+        await getLastPrice(pair)
+    } catch (e) {
+        return false
+    }
+    return true
+}
+
 
 export {
     getIndicator,
     getLastPrice,
-    getReturnFromHTML,
     logJsonTable,
-    analyseJsonTable
+    analyseJsonTable,
+    isValidInterval,
+    isPairValid
 }
