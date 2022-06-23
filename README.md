@@ -111,6 +111,7 @@ Finally, you can run three different actions listed above as follows :
   </tr>
 </tbody>
 </table>
+
 ## Run in real time
 
 Alternatively, if you are developing new features on this project aiming for a pull request (much appreciated), you can open two different terminals at the root of its directory and run :
