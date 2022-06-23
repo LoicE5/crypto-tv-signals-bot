@@ -1,6 +1,5 @@
-import { cp } from 'fs'
 import { getLastPrice, getIndicator, logJsonTable, analyseJsonTable, isValidInterval, isPairValid } from './functions'
-import { readFile, readJsonFile, readJsoncOutputFile, getValueFromArgv, isArgv } from './tools'
+import { getValueFromArgv, isArgv } from './tools'
 
 (async () => {
 
@@ -43,7 +42,7 @@ import { readFile, readJsonFile, readJsoncOutputFile, getValueFromArgv, isArgv }
     }
 
     // If the argv word is Log
-    if (firstArgv == 'log') {
+    if (firstArgv == 'write' || firstArgv == 'log') {
         const pair = getValueFromArgv("--pair", process.argv) as string // We get the pair as a string, such as "BTCUSDT"
         const interval = getValueFromArgv("--interval", process.argv) as string || "1m" // We get the TradingView's signal interval to use ("1m", "4h", "1w"...)
         const delay = Number(getValueFromArgv("--delay", process.argv)) || 10 // We get the given int for the delay (set at 10 seconds by default) between each fetch
