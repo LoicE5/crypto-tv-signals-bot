@@ -77,16 +77,16 @@ async function getLastPrice(pair:string, exchange:Exchange=defaultExchange) {
  * @param exchange Echange CCXT object that will be used to fetch the price (default is an instance of Binance)
  * @returns The price as a float
  */
-async function logJsonTable(pair:string, interval:string, delay:number=10, exchange:Exchange=defaultExchange) {
-
+async function logJsonTable(pair: string, interval: string, delay: number = 10, exchange: Exchange = defaultExchange) {
+    
+    if (!fs.existsSync('./output'))
+        fs.mkdirSync('./output')
+    
     const date = new Date() // Creating a date object
 
     const fileName = `output/${pair}_${interval}_${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}.jsonc` // We generate a file name in the output folder, with some info such as the pair, the TradingView interval and the date
 
     const head = `/* File : ${fileName} */ [` // Head of the html file, with info
-
-    if (!fs.existsSync('./output'))
-        fs.mkdirSync('./output')
 
     writeFile(fileName,head) // We create the file (replacing if one already exists), with the head as content
 
