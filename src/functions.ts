@@ -39,10 +39,10 @@ async function getIndicator(pair:string, interval:string="1m", platform:string="
         const page = await browser.newPage()
         await page.goto(url)
 
-        await page.waitForSelector('.speedometerSignal-RaUvtPLE')
+        await page.waitForSelector('[class*="speedometerSignal"]')
 
         const trend = await page.evaluate(() => {
-            return (<HTMLElement>document.documentElement.querySelector('.speedometerSignal-RaUvtPLE')!).innerText
+            return (<HTMLElement>document.documentElement.querySelector('[class*="speedometerSignal"]')!).innerText
         })
 
         await browser.close()
