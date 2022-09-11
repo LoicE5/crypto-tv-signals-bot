@@ -86,7 +86,7 @@ async function logJsonTable(pair: string, interval: string, delay: number = 10, 
 
     const fileName = `output/${pair}_${interval}_${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}.jsonc` // We generate a file name in the output folder, with some info such as the pair, the TradingView interval and the date
 
-    const head = `/* File : ${fileName} */ [` // Head of the html file, with info
+    const head = `[` // Head of the jsonc file (only an open bracket)
 
     writeFile(fileName,head) // We create the file (replacing if one already exists), with the head as content
 
