@@ -1,10 +1,13 @@
 import { getLastPrice, getIndicator, logJsonTable, analyseJsonTable, isValidInterval, isPairValid } from './functions'
 import { getValueFromArgv, isArgv } from './tools'
+import puppeteer from "puppeteer"
 
 (async () => {
 
-    const firstArgv = process.argv[2] // Get the first argument passed in the node CLI
+    const browser:puppeteer.Browser = await puppeteer.launch()
 
+    const firstArgv = process.argv[2] // Get the first argument passed in the node CLI
+  
     // If the argv is Analyze
     if (firstArgv == 'analyze') {
         const path = getValueFromArgv("--path", process.argv) as string // We get the value of the --path argv
@@ -37,7 +40,7 @@ import { getValueFromArgv, isArgv } from './tools'
 
         // We log the pair, the chosen interval, the latest price from Binance, and the given signal by TradingView
         setInterval(async () => {
-            console.log(`Pair : ${pair} | Interval : ${interval} | Price : ${await getLastPrice(pair)} | Signal : ${await getIndicator(pair,interval)}`)
+            console.log(`Pair : ${pair} | Interval : ${interval} | Price : ${await getLastPrice(pair)} | Signal : ${await getIndicator(browser, pair, interval)}`)
         }, 1000)
     }
 
@@ -60,7 +63,7 @@ import { getValueFromArgv, isArgv } from './tools'
         }
 
         // We create the file and write the data in it
-        await logJsonTable(pair, interval, delay)
+        await logJsonTable(browser, pair, interval, delay)
     }
     
 })()

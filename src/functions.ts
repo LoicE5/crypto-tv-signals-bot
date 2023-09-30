@@ -11,7 +11,7 @@ import fs from "fs"
  * @param platform The platform we want to use as TradingView's data source (default is "BINANCE", caps string only)
  * @returns The indicator string from tradingview, or "ERROR in case of fail"
  */
-async function getIndicator(pair:string, interval:string="1m", platform:string="BINANCE") {
+async function getIndicator(browser:puppeteer.Browser, pair:string, interval:string="1m", platform:string="BINANCE") {
 
     const valid_interval = ['1m', '5m', '15m', '30m', '1h', '2h', '4h', '1D', '1W', '1M']
     if (!valid_interval.includes(interval)) {
@@ -35,17 +35,20 @@ async function getIndicator(pair:string, interval:string="1m", platform:string="
 
     try {
         
-        const browser = await puppeteer.launch()
         const page = await browser.newPage()
         await page.goto(url)
 
-        await page.waitForSelector('[class*="speedometerSignal"]')
+        await page.waitForSelector('[class*="speedometerText"]')
 
         const trend = await page.evaluate(() => {
-            return (<HTMLElement>document.documentElement.querySelector('[class*="speedometerSignal"]')!).innerText
+            const signalClass = document.documentElement.querySelector('[class*="speedometerText"]')?.parentElement?.classList[1].split('-') as string[]
+            
+            if (signalClass[1] === 'strong')
+                return `${signalClass[1].toUpperCase()} ${signalClass[2].toUpperCase()}`
+            return signalClass[1].toUpperCase()
         })
 
-        await browser.close()
+        await page.close()
 
         return trend
 
@@ -77,7 +80,7 @@ async function getLastPrice(pair:string, exchange:Exchange=defaultExchange) {
  * @param exchange Echange CCXT object that will be used to fetch the price (default is an instance of Binance)
  * @returns The price as a float
  */
-async function logJsonTable(pair: string, interval: string, delay: number = 10, exchange: Exchange = defaultExchange) {
+async function logJsonTable(browser:puppeteer.Browser, pair: string, interval: string, delay: number = 10, exchange: Exchange = defaultExchange) {
     
     if (!fs.existsSync('./output'))
         fs.mkdirSync('./output')
@@ -86,9 +89,9 @@ async function logJsonTable(pair: string, interval: string, delay: number = 10, 
 
     const fileName = `output/${pair}_${interval}_${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}.jsonc` // We generate a file name in the output folder, with some info such as the pair, the TradingView interval and the date
 
-    const head = `/* File : ${fileName} */ [` // Head of the html file, with info
+    const head = `[` // Head of the jsonc file (only an open bracket)
 
-    writeFile(fileName,head) // We create the file (replacing if one already exists), with the head as content
+    writeFile(fileName,head, true) // We create the file (replacing if one already exists), with the head as content
 
     setInterval(async () => { // We repeat the following forever, with a delay
 
@@ -97,7 +100,7 @@ async function logJsonTable(pair: string, interval: string, delay: number = 10, 
             "interval": interval,
             "unix_time": Date.now(),
             "price": await getLastPrice(pair, exchange),
-            "signal": await getIndicator(pair, interval)
+            "signal": await getIndicator(browser, pair, interval)
         }
     
         console.log(row) // We log the row
