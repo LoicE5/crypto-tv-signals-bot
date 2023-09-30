@@ -140,4 +140,4 @@ You can find me on :
 
 - [LinkedIn](https://www.linkedin.com/in/loic-etienne/)
 - [GitHub](https://github.com/LoicE5)
-- [loic@loic.finance](mailto:loic@loic.finance)
+- [loic-etienne@naver.com](mailto:loic-etienne@naver.com)
