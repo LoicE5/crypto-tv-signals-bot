@@ -2,7 +2,7 @@
   "dependencies": {
     "ccxt": "^1.68.65",
     "fs": "^0.0.1-security",
-    "node-fetch": "^3.1.1",
+    "node-fetch": "^3.2.10",
     "puppeteer": "^24.6.1"
   },
   "devDependencies": {
