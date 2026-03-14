@@ -3,7 +3,7 @@ import fs from "fs"
 import path from "path"
 
 // We test the pure functions that don't require puppeteer or ccxt
-import { isValidInterval, analyseJsonTable } from "../functions"
+import { isValidInterval, analyseJsonTable } from "../src/functions"
 
 const TEST_DIR = "/tmp/crypto-tv-signals-bot-function-tests"
 const TEST_JSONC_FILE = path.join(TEST_DIR, "test.jsonc")

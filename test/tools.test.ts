@@ -14,7 +14,7 @@ import {
     isNull,
     getValueFromArgv,
     isArgv
-} from "../tools"
+} from "../src/tools"
 
 const TEST_DIR = "/tmp/crypto-tv-signals-bot-tests"
 const TEST_FILE = path.join(TEST_DIR, "test.txt")

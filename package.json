@@ -3,14 +3,13 @@
   "version": "1.0.0",
   "scripts": {
     "build": "tsc",
-    "dev": "nodemon --exec ts-node src/index.ts",
-    "start": "ts-node src/index.ts",
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
     "lint": "eslint src/**/*.ts",
     "test": "bun test"
   },
   "dependencies": {
     "ccxt": "^4.4.80",
-    "node-fetch": "^3.3.2",
     "puppeteer": "^24.6.1"
   },
   "devDependencies": {
@@ -18,8 +17,6 @@
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0",
-    "nodemon": "^3.1.9",
-    "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
   },
   "overrides": {
