@@ -3,7 +3,8 @@ import fs from "fs"
 import path from "path"
 
 // We test the pure functions that don't require puppeteer or ccxt
-import { isValidInterval, analyseJsonTable } from "../src/functions"
+import { analyseJsonTable } from "../src/functions"
+import { validIntervals } from "../src/constants"
 
 const TEST_DIR = "/tmp/crypto-tv-signals-bot-function-tests"
 const TEST_JSONC_FILE = path.join(TEST_DIR, "test.jsonc")
@@ -15,27 +16,26 @@ beforeEach(() => {
 
 describe("isValidInterval", () => {
     it("returns true for valid intervals", () => {
-        const validIntervals = ['1m', '5m', '15m', '30m', '1h', '2h', '4h', '1D', '1W', '1M']
-        for(const interval of validIntervals) {
-            expect(isValidInterval(interval)).toBe(true)
+        for(const interval of [...validIntervals]) {
+            expect(validIntervals.has(interval)).toBe(true)
         }
     })
 
     it("returns false for an invalid interval string", () => {
-        expect(isValidInterval("3m")).toBe(false)
-        expect(isValidInterval("6h")).toBe(false)
-        expect(isValidInterval("1d")).toBe(false) // lowercase 'd'
-        expect(isValidInterval("")).toBe(false)
-        expect(isValidInterval("invalid")).toBe(false)
+        expect(validIntervals.has("3m")).toBe(false)
+        expect(validIntervals.has("6h")).toBe(false)
+        expect(validIntervals.has("1d")).toBe(false) // lowercase 'd'
+        expect(validIntervals.has("")).toBe(false)
+        expect(validIntervals.has("invalid")).toBe(false)
     })
 
     it("is case-sensitive (1d is not the same as 1D)", () => {
-        expect(isValidInterval("1D")).toBe(true)
-        expect(isValidInterval("1d")).toBe(false)
+        expect(validIntervals.has("1D")).toBe(true)
+        expect(validIntervals.has("1d")).toBe(false)
     })
 
     it("returns false for numeric-only input", () => {
-        expect(isValidInterval("1")).toBe(false)
+        expect(validIntervals.has("1")).toBe(false)
     })
 })
 

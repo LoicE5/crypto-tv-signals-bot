@@ -4,6 +4,7 @@ import { defaultExchange } from './exchanges'
 import { writeFile, appendFile, readOutputFile } from './tools'
 import { TickerRow, AnalysisResult, SignalValue } from './interfaces'
 import { mkdir } from "node:fs/promises"
+import { validIntervals } from "./constants"
 
 /**
  * Returns a signal indicator from TradingView's Technical Analysis Widget
@@ -13,10 +14,9 @@ import { mkdir } from "node:fs/promises"
  * @param platform The TradingView data source platform in uppercase (default: "BINANCE")
  * @returns The signal string, or "ERROR" on failure
  */
-async function getIndicator(browser: Browser, pair: string, interval: string = "1m", platform: string = "BINANCE"): Promise<SignalValue> {
+export async function getIndicator(browser: Browser, pair: string, interval: string = "1m", platform: string = "BINANCE"): Promise<SignalValue> {
 
-    const validIntervals = ['1m', '5m', '15m', '30m', '1h', '2h', '4h', '1D', '1W', '1M']
-    if(!validIntervals.includes(interval)) {
+    if(!validIntervals.has(interval)) {
         console.warn(`INVALID INTERVAL : ${interval} not in ${validIntervals}`)
         return 'ERROR'
     }
@@ -63,7 +63,7 @@ async function getIndicator(browser: Browser, pair: string, interval: string = "
  * @param exchange CCXT exchange instance to use (default: Binance)
  * @returns The last price as a number, or undefined if unavailable
  */
-async function getLastPrice(pair: string, exchange: Exchange = defaultExchange): Promise<number | undefined> {
+export async function getLastPrice(pair: string, exchange: Exchange = defaultExchange): Promise<number | undefined> {
     const info = await exchange.fetchTicker(pair)
     return info.last
 }
@@ -77,7 +77,7 @@ async function getLastPrice(pair: string, exchange: Exchange = defaultExchange):
  * @param delay Seconds between each fetch and write (default: 10)
  * @param exchange CCXT exchange instance to use (default: Binance)
  */
-async function logJsonTable(browser: Browser, pair: string, interval: string, delay: number = 10, exchange: Exchange = defaultExchange): Promise<void> {
+export async function logJsonTable(browser: Browser, pair: string, interval: string, delay: number = 10, exchange: Exchange = defaultExchange): Promise<void> {
 
     await mkdir('./output', { recursive: true })
 
@@ -114,7 +114,7 @@ async function logJsonTable(browser: Browser, pair: string, interval: string, de
  * @param inverted If true, all positions are reversed (short on BUY, long on SELL)
  * @returns AnalysisResult with per-transaction profits, total sum and % variation, or undefined if no signal changes
  */
-async function analyseJsonTable(pathToNdjsonFile: string, inverted: boolean = false): Promise<AnalysisResult | undefined> {
+export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boolean = false): Promise<AnalysisResult | undefined> {
 
     const data = await readOutputFile(pathToNdjsonFile) as Array<TickerRow>
 
@@ -186,30 +186,13 @@ async function analyseJsonTable(pathToNdjsonFile: string, inverted: boolean = fa
 }
 
 /**
- * Returns true if the given interval string is valid
- */
-function isValidInterval(interval: string): boolean {
-    const validIntervals = ['1m', '5m', '15m', '30m', '1h', '2h', '4h', '1D', '1W', '1M']
-    return validIntervals.includes(interval)
-}
-
-/**
  * Returns true if the pair exists on the exchange, false otherwise
  */
-async function isPairValid(pair: string): Promise<boolean> {
+export async function isPairValid(pair: string): Promise<boolean> {
     try {
         await getLastPrice(pair)
         return true
     } catch(error: unknown) {
         return false
     }
-}
-
-export {
-    getIndicator,
-    getLastPrice,
-    logJsonTable,
-    analyseJsonTable,
-    isValidInterval,
-    isPairValid
 }

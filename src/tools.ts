@@ -1,15 +1,16 @@
 import { appendFile as nodeAppendFile } from "node:fs"
 
-async function writeFile(path: string, content: string, consoleStatus: boolean = false): Promise<void> {
+export async function writeFile(path: string, content: string, consoleStatus: boolean = false): Promise<void> {
     await Bun.write(path, content)
     if(consoleStatus)
         console.info(`File ${path} created successfully`)
 }
 
-async function appendFile(path: string, content: string, consoleStatus: boolean = false): Promise<void> {
+export async function appendFile(path: string, content: string, consoleStatus: boolean = false): Promise<void> {
     return new Promise((resolve, reject) => {
         nodeAppendFile(path, content, (error: NodeJS.ErrnoException | null) => {
-            if(error) { reject(error); return }
+            if (error)
+                return reject(error)
             if(consoleStatus)
                 console.info(`File ${path} updated successfully`)
             resolve()
@@ -17,24 +18,24 @@ async function appendFile(path: string, content: string, consoleStatus: boolean 
     })
 }
 
-async function readFile(path: string): Promise<string> {
+export async function readFile(path: string): Promise<string> {
     return Bun.file(path).text()
 }
 
-async function readJsonFile(path: string): Promise<unknown> {
+export async function readJsonFile(path: string): Promise<unknown> {
     const fileContent = await readFile(path)
     return parseJsonc(fileContent)
 }
 
-function removeCommentsFromString(input: string): string {
+export function removeCommentsFromString(input: string): string {
     return input.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '')
 }
 
-function parseJsonc(jsoncString: string): unknown {
+export function parseJsonc(jsoncString: string): unknown {
     return JSON.parse(jsoncString.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, ''))
 }
 
-async function readOutputFile(path: string): Promise<Array<object>> {
+export async function readOutputFile(path: string): Promise<Array<object>> {
     const fileContent = await readFile(path)
     return fileContent
         .split('\n')
@@ -42,7 +43,7 @@ async function readOutputFile(path: string): Promise<Array<object>> {
         .map(line => JSON.parse(line))
 }
 
-function isJsonString(str: string): boolean {
+export function isJsonString(str: string): boolean {
     try {
         JSON.parse(str)
     } catch(error: unknown) {
@@ -51,15 +52,15 @@ function isJsonString(str: string): boolean {
     return true
 }
 
-function isArray(input: unknown): boolean {
+export function isArray(input: unknown): boolean {
     return Array.isArray(input)
 }
 
-function isNull(input: unknown): boolean {
+export function isNull(input: unknown): boolean {
     return input === null || input === undefined || input === ""
 }
 
-function getValueFromArgv(param: string, argv: string[]): string | null {
+export function getValueFromArgv(param: string, argv: string[]): string | null {
     for(const arg of argv) {
         if(arg.startsWith(`${param}=`))
             return arg.slice(param.length + 1)
@@ -67,21 +68,6 @@ function getValueFromArgv(param: string, argv: string[]): string | null {
     return null
 }
 
-function isArgv(param: string, argv: string[]): boolean {
+export function isArgv(param: string, argv: string[]): boolean {
     return argv.includes(param) || argv.includes(`${param}=true`)
-}
-
-export {
-    writeFile,
-    appendFile,
-    isJsonString,
-    isArray,
-    isNull,
-    readFile,
-    readJsonFile,
-    parseJsonc,
-    removeCommentsFromString,
-    readOutputFile,
-    getValueFromArgv,
-    isArgv
 }
