@@ -122,9 +122,11 @@ Other available commands:
 bun test              # Run the test suite
 bun run lint          # Run ESLint
 bun run typecheck     # Type-check with tsc (no emit)
-bun run build              # Build a binary for the current platform → dist/crypto-tv-signals-bot
-bun run build:linux-x64   # Build Linux x64 binary (used by CI) → dist/crypto-tv-signals-bot-linux-x64
-bun run build:linux-arm64 # Build Linux arm64 binary (used by CI) → dist/crypto-tv-signals-bot-linux-arm64
+bun run build              # Build all 4 targets (linux-x64, linux-arm64, macos-x64, macos-arm64)
+bun run build:linux-x64   # Linux x64  → dist/crypto-tv-signals-bot-linux-x64
+bun run build:linux-arm64 # Linux arm64 → dist/crypto-tv-signals-bot-linux-arm64
+bun run build:macos-x64   # macOS x64  → dist/crypto-tv-signals-bot-macos-x64
+bun run build:macos-arm64 # macOS arm64 → dist/crypto-tv-signals-bot-macos-arm64
 ```
 
 ---
