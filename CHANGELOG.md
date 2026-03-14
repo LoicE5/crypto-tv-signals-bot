@@ -4,7 +4,13 @@
 
 ### Added
 - `install:chrome` package script to install Chrome via Puppeteer's CLI
-- Argument validation in `index.ts`: exits with an error if no command or an unknown command is provided
+- Argument validation in `index.ts`: exits with an error if no command or unknown command is provided; required args (`--pair`, `--path`) validated with clear error messages
+- `src/interfaces.ts`: `SignalValue`, `TickerRow`, `AnalysisResult` types shared across the codebase
+- `typecheck` script: runs `tsc --noEmit` for type-checking without emitting files
+- `build:x64` and `build:arm64` scripts: produce self-contained Linux binaries via `bun build --compile`
+- GitHub Actions workflow: builds and releases binaries on push to `master`
+- `protobufjs` dependency (required by ccxt for dYdX/MEXC exchange modules)
+- Business logic audit report (`OUTPUT.md`)
 
 ### Changed
 - Migrated runtime from Node.js to Bun
@@ -18,6 +24,19 @@
 - Fixed `fs` callback error parameter typing (`NodeJS.ErrnoException | null`)
 - Removed `basic-ftp`, `semver`, `minimatch`, `tar-fs`, `brace-expansion` overrides (no longer needed with updated deps)
 - Reduced overrides to `yauzl: ^3.2.1` only (fixes moderate CVE in `extract-zip` transitive dependency)
+- Replaced Node.js `fs` APIs with Bun native equivalents: `Bun.write()`, `Bun.file().text()`, `node:fs/promises` `mkdir`
+- Replaced broken JSONC append format with NDJSON (one JSON object per line): always valid, crash-safe
+- Output file extension changed from `.jsonc` to `.ndjson`
+- `readJsoncOutputFile` replaced by `readOutputFile` with NDJSON parser
+- `replaceTrailingCommaFromJsonString` removed (no longer needed)
+- `isNull`: fixed loose `==` equality to strict `===` (0 and false no longer incorrectly treated as null-like)
+- `getValueFromArgv`: returns `string | null` instead of `string | boolean`; uses `startsWith` to prevent partial argument name matches
+- `analyseJsonTable`: returns `AnalysisResult | undefined` with proper types; removed non-null assertions; `console.warn` message corrected
+- `logJsonTable`: `setInterval` body wrapped in try/catch; uses `TickerRow` type
+- `getIndicator`: returns `SignalValue` type
+- `index.ts`: `analyze` command no longer launches a browser; SIGINT handler closes browser cleanly; all string args properly null-checked
+- `build` script: replaced `tsc` with `bun build --compile` for producing standalone binaries to `dist/`
+- `tsconfig.json`: `outDir` set to `./build` (for type-checking only, not used in production build)
 - Removed `trustedDependencies` for `ccxt` (its postinstall script is cosmetic only)
 - Updated README: removed HTML tags, replaced with Markdown, updated all commands to Bun
 

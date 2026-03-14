@@ -2,7 +2,10 @@
   "name": "crypto-tv-signals-bot",
   "version": "1.0.0",
   "scripts": {
-    "build": "tsc",
+    "build": "bun run build:x64 && bun run build:arm64",
+    "build:x64": "PROJ=\"$(pwd)\" && mkdir -p \"$PROJ/dist\" && cd /tmp && bun build \"$PROJ/src/index.ts\" --compile --target=bun-linux-x64 --outfile=\"$PROJ/dist/crypto-tv-signals-bot-x64\"",
+    "build:arm64": "PROJ=\"$(pwd)\" && mkdir -p \"$PROJ/dist\" && cd /tmp && bun build \"$PROJ/src/index.ts\" --compile --target=bun-linux-arm64 --outfile=\"$PROJ/dist/crypto-tv-signals-bot-arm64\"",
+    "typecheck": "tsc --noEmit",
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
     "lint": "eslint src/**/*.ts",
@@ -11,6 +14,7 @@
   },
   "dependencies": {
     "ccxt": "^4.4.80",
+    "protobufjs": "^8.0.0",
     "puppeteer": "^24.6.1"
   },
   "devDependencies": {
