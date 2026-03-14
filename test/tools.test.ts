@@ -8,7 +8,7 @@ import {
     readJsonFile,
     parseJsonc,
     removeCommentsFromString,
-    readJsoncOutputFile,
+    readOutputFile,
     isJsonString,
     isArray,
     isNull,
@@ -113,34 +113,36 @@ describe("removeCommentsFromString", () => {
     })
 })
 
-describe("readJsoncOutputFile", () => {
-    it("parses a .jsonc file with trailing comma (legacy format) into an array", async () => {
-        const content = `[{"pair":"BTCUSDT","price":50000,"signal":"BUY"},{"pair":"BTCUSDT","price":51000,"signal":"SELL"},`
+describe("readOutputFile", () => {
+    it("parses a .ndjson file with multiple entries (one JSON object per line)", async () => {
+        const content = `{"pair":"BTCUSDT","price":50000,"signal":"BUY"}\n{"pair":"BTCUSDT","price":51000,"signal":"SELL"}\n`
         fs.writeFileSync(TEST_JSONC_FILE, content)
-        const result = await readJsoncOutputFile(TEST_JSONC_FILE)
+        const result = await readOutputFile(TEST_JSONC_FILE)
         expect(Array.isArray(result)).toBe(true)
         expect(result.length).toBe(2)
     })
 
-    it("parses a .jsonc file without trailing comma into an array", async () => {
-        const content = `[{"pair":"BTCUSDT","price":50000,"signal":"BUY"}]`
+    it("parses a .ndjson file with a single entry", async () => {
+        const content = `{"pair":"BTCUSDT","price":50000,"signal":"BUY"}\n`
         fs.writeFileSync(TEST_JSONC_FILE, content)
-        const result = await readJsoncOutputFile(TEST_JSONC_FILE)
+        const result = await readOutputFile(TEST_JSONC_FILE)
         expect(Array.isArray(result)).toBe(true)
         expect(result.length).toBe(1)
     })
 
-    it("parses a .jsonc file with inline comments", async () => {
-        const content = `[
-            // first entry
-            {"pair":"BTCUSDT","price":50000,"signal":"BUY"},
-            /* second entry */
-            {"pair":"BTCUSDT","price":51000,"signal":"SELL"}
-        ]`
+    it("ignores blank lines", async () => {
+        const content = `{"pair":"BTCUSDT","price":50000,"signal":"BUY"}\n\n{"pair":"BTCUSDT","price":51000,"signal":"SELL"}\n`
         fs.writeFileSync(TEST_JSONC_FILE, content)
-        const result = await readJsoncOutputFile(TEST_JSONC_FILE)
+        const result = await readOutputFile(TEST_JSONC_FILE)
         expect(Array.isArray(result)).toBe(true)
         expect(result.length).toBe(2)
+    })
+
+    it("returns an empty array for an empty file", async () => {
+        fs.writeFileSync(TEST_JSONC_FILE, "")
+        const result = await readOutputFile(TEST_JSONC_FILE)
+        expect(Array.isArray(result)).toBe(true)
+        expect(result.length).toBe(0)
     })
 })
 

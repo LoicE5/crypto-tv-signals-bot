@@ -1,7 +1,7 @@
 import puppeteer, { Browser } from "puppeteer"
 import { Exchange } from "ccxt"
 import { defaultExchange } from './exchanges'
-import { writeFile, appendFile, readJsoncOutputFile } from './tools'
+import { writeFile, appendFile, readOutputFile } from './tools'
 import { mkdir } from "node:fs/promises"
 
 /**
@@ -116,7 +116,7 @@ async function logJsonTable(browser: Browser, pair: string, interval: string, de
  */
 async function analyseJsonTable(pathToNdjsonFile: string, inverted: boolean = false): Promise<object | void> {
 
-    const data = await readJsoncOutputFile(pathToNdjsonFile) as Array<{ price: number, signal: string }>
+    const data = await readOutputFile(pathToNdjsonFile) as Array<{ price: number, signal: string }>
 
     let firstPrice: number | undefined
     let lastPrice: number | undefined

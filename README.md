@@ -7,8 +7,8 @@ This tool uses Puppeteer to scrape [TradingView's Technical Analysis Widget](htt
 Three commands are available:
 
 - **simulate** — Print the current price and TradingView signal for a pair at regular intervals
-- **write** — Record price and signal data over time into a `.jsonc` file
-- **analyze** — Estimate ROI from a previously written `.jsonc` file, based on the following strategy:
+- **write** — Record price and signal data over time into a `.ndjson` file (one JSON object per line — always valid, safe through crashes)
+- **analyze** — Estimate ROI from a previously written `.ndjson` file, based on the following strategy:
   - `STRONG BUY` → long x2
   - `BUY` → long x1
   - `NEUTRAL` → exit market
@@ -57,7 +57,7 @@ bun start simulate --pair=BNBUSDT --interval=1W
 
 ### write
 
-Record price and signal to a `.jsonc` file in `./output/`:
+Record price and signal to a `.ndjson` file in `./output/` (NDJSON — one JSON object per line):
 
 ```bash
 # BTC/USDT every 10 seconds (default delay), 1-minute interval
@@ -82,16 +82,16 @@ Estimate profit from a previously written file:
 
 ```bash
 # Standard strategy
-bun start analyze --path=./output/BTCUSDT_1m_14-3-2026.jsonc
+bun start analyze --path=./output/BTCUSDT_1m_14-3-2026.ndjson
 
 # Inverted strategy (short on BUY, long on SELL)
-bun start analyze --path=./output/BTCUSDT_1m_14-3-2026.jsonc --inverted
+bun start analyze --path=./output/BTCUSDT_1m_14-3-2026.ndjson --inverted
 
 # Absolute path
-bun start analyze --path=/home/user/data/ETHUSDT_4h_1-1-2026.jsonc
+bun start analyze --path=/home/user/data/ETHUSDT_4h_1-1-2026.ndjson
 
 # Inverted with flag=true syntax
-bun start analyze --path=./output/SOLUSDT_1D_14-3-2026.jsonc --inverted=true
+bun start analyze --path=./output/SOLUSDT_1D_14-3-2026.ndjson --inverted=true
 ```
 
 ---
@@ -103,7 +103,7 @@ bun start analyze --path=./output/SOLUSDT_1D_14-3-2026.jsonc --inverted=true
 | `--pair` | simulate, write | Cryptocurrency pair | Any valid Binance pair (e.g. `BTCUSDT`, `ETHDAI`) | required |
 | `--interval` | simulate, write | TradingView analysis interval | `1m` `5m` `15m` `30m` `1h` `2h` `4h` `1D` `1W` `1M` | `1m` |
 | `--delay` | write | Seconds between each fetch and write | Any number — below 1 or above 600 is not recommended | `10` |
-| `--path` | analyze | Path to a `.json` or `.jsonc` file to analyze | Any valid file path | required |
+| `--path` | analyze | Path to a `.ndjson` file to analyze | Any valid file path | required |
 | `--inverted` | analyze | Invert all positions (short on BUY, long on SELL) | flag or `=true` | `false` |
 
 ---

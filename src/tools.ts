@@ -34,21 +34,12 @@ function parseJsonc(jsoncString: string): unknown {
     return JSON.parse(jsoncString.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, ''))
 }
 
-function replaceTrailingCommaFromJsonString(jsonString: string, newChar: string): string {
-    const latestChar = jsonString.at(-1)
-
-    if(latestChar != ",")
-        return jsonString
-
-    return jsonString.replace(/.$/,newChar)
-}
-
-async function readJsoncOutputFile(path: string): Promise<Array<object>> {
-    let fileContent = await readFile(path)
-    fileContent = removeCommentsFromString(fileContent)
-    fileContent = replaceTrailingCommaFromJsonString(fileContent, ']')
-
-    return JSON.parse(fileContent)
+async function readOutputFile(path: string): Promise<Array<object>> {
+    const fileContent = await readFile(path)
+    return fileContent
+        .split('\n')
+        .filter(line => line.trim().length > 0)
+        .map(line => JSON.parse(line))
 }
 
 function isJsonString(str: string): boolean {
@@ -93,7 +84,7 @@ export {
     readJsonFile,
     parseJsonc,
     removeCommentsFromString,
-    readJsoncOutputFile,
+    readOutputFile,
     getValueFromArgv,
     isArgv
 }

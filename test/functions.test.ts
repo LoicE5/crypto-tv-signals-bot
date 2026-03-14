@@ -49,8 +49,8 @@ describe("analyseJsonTable", () => {
     // So profit is measured from firstPrice (set at start of a signal run) to lastPrice (last row before signal changes)
 
     function writeTestJsonc(records: Array<{ pair: string, interval: string, unix_time: number, price: number, signal: string }>): void {
-        // Mimic the format that logJsonTable writes: open bracket + comma-suffixed entries (no closing bracket)
-        const content = "[" + records.map((r) => JSON.stringify(r) + ",").join("")
+        // Mimic the NDJSON format that logJsonTable writes: one JSON object per line
+        const content = records.map((r) => JSON.stringify(r)).join("\n") + "\n"
         fs.writeFileSync(TEST_JSONC_FILE, content)
     }
 
