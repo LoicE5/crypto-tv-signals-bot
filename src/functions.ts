@@ -41,7 +41,7 @@ async function getIndicator(browser: Browser, pair: string, interval: string = "
         await page.waitForSelector('[class*="speedometerText"]')
 
         const trend = await page.evaluate(() => {
-            const signalClass = document.documentElement.querySelector('[class*="speedometerText"]')?.parentElement?.classList[1].split('-') as string[]
+            const signalClass = (document.documentElement.querySelector('[class*="speedometerText"]')?.parentElement?.classList.item(1) as string).split('-') as string[]
 
             if(signalClass.at(1) === 'strong')
                 return `${signalClass.at(1)?.toUpperCase()} ${signalClass.at(2)?.toUpperCase()}`

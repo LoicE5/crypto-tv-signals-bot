@@ -34,7 +34,7 @@ function parseJsonc(jsoncString: string): unknown {
 }
 
 function replaceTrailingCommaFromJsonString(jsonString: string, newChar: string): string {
-    const latestChar = jsonString.charAt(jsonString.length - 1)
+    const latestChar = jsonString.at(-1)
 
     if(latestChar != ",")
         return jsonString
