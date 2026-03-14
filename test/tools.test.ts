@@ -5,9 +5,6 @@ import {
     writeFile,
     appendFile,
     readFile,
-    readJsonFile,
-    parseJsonc,
-    removeCommentsFromString,
     readOutputFile,
     isJsonString,
     isArray,
@@ -71,48 +68,6 @@ describe("readFile", () => {
     })
 })
 
-describe("parseJsonc", () => {
-    it("parses a valid JSON string", () => {
-        const result = parseJsonc('{"key": "value"}')
-        expect(result).toEqual({ key: "value" })
-    })
-
-    it("parses a JSON string with single-line comments", () => {
-        const result = parseJsonc('{"key": "value"} // comment')
-        expect(result).toEqual({ key: "value" })
-    })
-
-    it("parses a JSON string with multi-line comments", () => {
-        const jsonc = `{
-            /* this is a comment */
-            "key": "value"
-        }`
-        const result = parseJsonc(jsonc)
-        expect(result).toEqual({ key: "value" })
-    })
-
-    it("throws on malformed JSON after stripping comments", () => {
-        expect(() => parseJsonc("{invalid json}")).toThrow()
-    })
-})
-
-describe("removeCommentsFromString", () => {
-    it("removes single-line comments", () => {
-        const result = removeCommentsFromString("value // comment")
-        expect(result).toBe("value ")
-    })
-
-    it("removes multi-line comments", () => {
-        const result = removeCommentsFromString("value /* multi\nline */ rest")
-        expect(result).toBe("value  rest")
-    })
-
-    it("leaves strings without comments unchanged", () => {
-        const result = removeCommentsFromString("just a string")
-        expect(result).toBe("just a string")
-    })
-})
-
 describe("readOutputFile", () => {
     it("parses a .ndjson file with multiple entries (one JSON object per line)", async () => {
         const content = `{"pair":"BTCUSDT","price":50000,"signal":"BUY"}\n{"pair":"BTCUSDT","price":51000,"signal":"SELL"}\n`
@@ -143,14 +98,6 @@ describe("readOutputFile", () => {
         const result = await readOutputFile(TEST_JSONC_FILE)
         expect(Array.isArray(result)).toBe(true)
         expect(result.length).toBe(0)
-    })
-})
-
-describe("readJsonFile", () => {
-    it("reads and parses a JSON file", async () => {
-        fs.writeFileSync(TEST_JSON_FILE, '{"name":"test","value":42}')
-        const result = await readJsonFile(TEST_JSON_FILE)
-        expect(result).toEqual({ name: "test", value: 42 })
     })
 })
 

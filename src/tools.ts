@@ -22,19 +22,6 @@ export async function readFile(path: string): Promise<string> {
     return Bun.file(path).text()
 }
 
-export async function readJsonFile(path: string): Promise<unknown> {
-    const fileContent = await readFile(path)
-    return parseJsonc(fileContent)
-}
-
-export function removeCommentsFromString(input: string): string {
-    return input.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '')
-}
-
-export function parseJsonc(jsoncString: string): unknown {
-    return JSON.parse(jsoncString.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, ''))
-}
-
 export async function readOutputFile(path: string): Promise<Array<object>> {
     const fileContent = await readFile(path)
     return fileContent
