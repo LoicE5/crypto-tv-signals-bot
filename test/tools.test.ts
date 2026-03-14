@@ -223,14 +223,12 @@ describe("isNull", () => {
         expect(isNull("value")).toBe(false)
     })
 
-    it("returns true for 0 due to JS coercion (0 == '')", () => {
-        // 0 == "" is true in JS due to type coercion, so isNull treats 0 as null-like
-        expect(isNull(0)).toBe(true)
+    it("returns false for 0 (strict equality — 0 is not null/undefined/empty string)", () => {
+        expect(isNull(0)).toBe(false)
     })
 
-    it("returns true for false due to JS coercion (false == '')", () => {
-        // false == "" is true in JS due to type coercion, so isNull treats false as null-like
-        expect(isNull(false)).toBe(true)
+    it("returns false for false (strict equality — false is not null/undefined/empty string)", () => {
+        expect(isNull(false)).toBe(false)
     })
 
     it("returns false for an object", () => {
@@ -245,9 +243,9 @@ describe("getValueFromArgv", () => {
         expect(getValueFromArgv("--interval", argv)).toBe("4h")
     })
 
-    it("returns false when the argument is not present", () => {
+    it("returns null when the argument is not present", () => {
         const argv = ["node", "script.js", "--interval=4h"]
-        expect(getValueFromArgv("--path", argv)).toBe(false)
+        expect(getValueFromArgv("--path", argv)).toBeNull()
     })
 
     it("returns empty string when argument is provided with no value", () => {
@@ -256,17 +254,19 @@ describe("getValueFromArgv", () => {
     })
 
     it("handles an empty argv array", () => {
-        expect(getValueFromArgv("--path", [])).toBe(false)
+        expect(getValueFromArgv("--path", [])).toBeNull()
     })
 
-    it("matches partial argument names since the function uses String.includes()", () => {
+    it("does not match partial argument names (uses startsWith)", () => {
         const argv = ["node", "script.js", "--pathlength=5"]
-        // --path is a substring of --pathlength=5 so the function matches it
-        // arg.replace("--path=", "") on "--pathlength=5" leaves "--pathlength=5" as-is
-        // because "--path=" is not a substring of "--pathlength=5"
-        const result = getValueFromArgv("--path", argv)
-        // includes("--path") matches, but replace("--path=", "") doesn't change anything
-        expect(result).toBe("--pathlength=5")
+        // --path does not startsWith "--pathlength=", so it does not match
+        expect(getValueFromArgv("--path", argv)).toBeNull()
+    })
+
+    it("does not match a flag without value (--flag with no =)", () => {
+        // --path without '=' is handled by isArgv, not getValueFromArgv
+        const argv = ["node", "script.js", "--path"]
+        expect(getValueFromArgv("--path", argv)).toBeNull()
     })
 })
 

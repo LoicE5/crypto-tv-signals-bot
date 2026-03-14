@@ -56,21 +56,18 @@ function isArray(input: unknown): boolean {
 }
 
 function isNull(input: unknown): boolean {
-    if(input == null || input == "" || input == undefined)
-        return true
-    else
-        return false
+    return input === null || input === undefined || input === ""
 }
 
-function getValueFromArgv(param: string, argv: Array<string>): string | boolean {
+function getValueFromArgv(param: string, argv: string[]): string | null {
     for(const arg of argv) {
-        if(arg.includes(param))
-            return arg.replace(`${param}=`, '')
+        if(arg.startsWith(`${param}=`))
+            return arg.slice(param.length + 1)
     }
-    return false
+    return null
 }
 
-function isArgv(param: string, argv: Array<string>): boolean {
+function isArgv(param: string, argv: string[]): boolean {
     return argv.includes(param) || argv.includes(`${param}=true`)
 }
 

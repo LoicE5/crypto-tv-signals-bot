@@ -12,34 +12,53 @@ import puppeteer, { Browser } from "puppeteer"
         process.exit(1)
     }
 
-    const browser: Browser = await puppeteer.launch()
-
-    // If the argv is Analyze
-    if(firstArgv == 'analyze') {
-        const path = getValueFromArgv("--path", process.argv) as string
+    // analyze does not require a browser
+    if(firstArgv === 'analyze') {
+        const path = getValueFromArgv("--path", process.argv)
         const inverted = isArgv("--inverted", process.argv)
 
-        try {
-            console.info(analyseJsonTable(path, inverted))
-        } catch(error: unknown) {
-            console.error(`Please make sure that you have correctly entered your path. The given one is ${path}. \n\n Thrown error : ${error}`)
+        if(!path) {
+            console.error("--path is required for the analyze command")
+            process.exit(1)
         }
 
+        try {
+            console.info(await analyseJsonTable(path, inverted))
+        } catch(error: unknown) {
+            console.error(`Failed to analyze file at "${path}": ${error}`)
+            process.exit(1)
+        }
+
+        return
     }
 
-    // If the argv word is Simulate
-    if(firstArgv == 'simulate') {
-        const pair = getValueFromArgv("--pair", process.argv) as string
-        const interval = getValueFromArgv("--interval", process.argv) as string || "1m"
+    const browser: Browser = await puppeteer.launch()
+
+    process.on('SIGINT', async () => {
+        await browser.close()
+        process.exit(0)
+    })
+
+    if(firstArgv === 'simulate') {
+        const pair = getValueFromArgv("--pair", process.argv)
+        const interval = getValueFromArgv("--interval", process.argv) ?? "1m"
+
+        if(!pair) {
+            console.error("--pair is required for the simulate command")
+            await browser.close()
+            process.exit(1)
+        }
 
         if(!isValidInterval(interval)) {
-            console.error("The given interval is not valid")
-            return
+            console.error(`Invalid interval "${interval}". Allowed: 1m 5m 15m 30m 1h 2h 4h 1D 1W 1M`)
+            await browser.close()
+            process.exit(1)
         }
 
         if(!await isPairValid(pair)) {
-            console.error("The given pair is not valid")
-            return
+            console.error(`Invalid pair "${pair}". Make sure it exists on Binance.`)
+            await browser.close()
+            process.exit(1)
         }
 
         setInterval(async () => {
@@ -47,20 +66,27 @@ import puppeteer, { Browser } from "puppeteer"
         }, 1000)
     }
 
-    // If the argv word is Log
-    if(firstArgv == 'write' || firstArgv == 'log') {
-        const pair = getValueFromArgv("--pair", process.argv) as string
-        const interval = getValueFromArgv("--interval", process.argv) as string || "1m"
+    if(firstArgv === 'write' || firstArgv === 'log') {
+        const pair = getValueFromArgv("--pair", process.argv)
+        const interval = getValueFromArgv("--interval", process.argv) ?? "1m"
         const delay = Number(getValueFromArgv("--delay", process.argv)) || 10
 
+        if(!pair) {
+            console.error("--pair is required for the write command")
+            await browser.close()
+            process.exit(1)
+        }
+
         if(!isValidInterval(interval)) {
-            console.error("The given interval is not valid")
-            return
+            console.error(`Invalid interval "${interval}". Allowed: 1m 5m 15m 30m 1h 2h 4h 1D 1W 1M`)
+            await browser.close()
+            process.exit(1)
         }
 
         if(!await isPairValid(pair)) {
-            console.error("The given pair is not valid")
-            return
+            console.error(`Invalid pair "${pair}". Make sure it exists on Binance.`)
+            await browser.close()
+            process.exit(1)
         }
 
         await logJsonTable(browser, pair, interval, delay)

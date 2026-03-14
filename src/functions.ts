@@ -1,18 +1,19 @@
-import puppeteer, { Browser } from "puppeteer"
+import { Browser } from "puppeteer"
 import { Exchange } from "ccxt"
 import { defaultExchange } from './exchanges'
 import { writeFile, appendFile, readOutputFile } from './tools'
+import { TickerRow, AnalysisResult, SignalValue } from './interfaces'
 import { mkdir } from "node:fs/promises"
 
 /**
- * Returns a string indicator ("BUY","SELL","NEUTRAL","STRONG BUY","STRONG SELL") from TradingView's widget
+ * Returns a signal indicator from TradingView's Technical Analysis Widget
  * @param browser The Puppeteer browser instance to use
- * @param pair The pair we want to get the indicator from (like "BTCUSDT")
- * @param interval The interval (1 minute, 1 hour, 1 day...) we want the indicator to be calculated on
- * @param platform The platform we want to use as TradingView's data source (default is "BINANCE", caps string only)
- * @returns The indicator string from tradingview, or "ERROR" in case of fail
+ * @param pair The pair to get the indicator for (e.g. "BTCUSDT")
+ * @param interval The TradingView time interval (e.g. "1m", "4h", "1D")
+ * @param platform The TradingView data source platform in uppercase (default: "BINANCE")
+ * @returns The signal string, or "ERROR" on failure
  */
-async function getIndicator(browser: Browser, pair: string, interval: string = "1m", platform: string = "BINANCE"): Promise<string | undefined> {
+async function getIndicator(browser: Browser, pair: string, interval: string = "1m", platform: string = "BINANCE"): Promise<SignalValue> {
 
     const validIntervals = ['1m', '5m', '15m', '30m', '1h', '2h', '4h', '1D', '1W', '1M']
     if(!validIntervals.includes(interval)) {
@@ -37,7 +38,6 @@ async function getIndicator(browser: Browser, pair: string, interval: string = "
     try {
         const page = await browser.newPage()
         await page.goto(url)
-
         await page.waitForSelector('[class*="speedometerText"]')
 
         const trend = await page.evaluate(() => {
@@ -49,168 +49,144 @@ async function getIndicator(browser: Browser, pair: string, interval: string = "
         })
 
         await page.close()
-
-        return trend
+        return (trend ?? 'ERROR') as SignalValue
 
     } catch(error: unknown) {
         console.error(error)
-        return "ERROR"
+        return 'ERROR'
     }
-
 }
 
 /**
- * Returns the price of the given cryptocurrencies
- * @param pair The pair we want to get the price from (like "BTCUSDT")
- * @param exchange Exchange CCXT object that will be used to fetch the price (default is an instance of Binance)
- * @returns The price as a float
+ * Returns the latest price of a cryptocurrency pair
+ * @param pair The pair to fetch (e.g. "BTCUSDT")
+ * @param exchange CCXT exchange instance to use (default: Binance)
+ * @returns The last price as a number, or undefined if unavailable
  */
 async function getLastPrice(pair: string, exchange: Exchange = defaultExchange): Promise<number | undefined> {
-
     const info = await exchange.fetchTicker(pair)
-    const price = info.last
-
-    return price
+    return info.last
 }
 
 /**
- * Create a .ndjson file that is periodically filled with one JSON object per line, each containing the signal and price of a cryptocurrency pair as well as the corresponding UNIX date.
+ * Writes one JSON record per line to a .ndjson file at each interval tick.
+ * The file is valid NDJSON at all times — safe through crashes or early exits.
  * @param browser The Puppeteer browser instance to use
- * @param pair The pair we want to get the data from (like "BTCUSDT")
- * @param interval The TradingView signal interval to use
- * @param delay The delay between each fetch to the exchange and TradingView's widget, therefore between each JSON object insertion
- * @param exchange Exchange CCXT object that will be used to fetch the price (default is an instance of Binance)
+ * @param pair The cryptocurrency pair (e.g. "BTCUSDT")
+ * @param interval The TradingView signal interval
+ * @param delay Seconds between each fetch and write (default: 10)
+ * @param exchange CCXT exchange instance to use (default: Binance)
  */
 async function logJsonTable(browser: Browser, pair: string, interval: string, delay: number = 10, exchange: Exchange = defaultExchange): Promise<void> {
 
     await mkdir('./output', { recursive: true })
 
     const date = new Date()
-
     const fileName = `output/${pair}_${interval}_${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}.ndjson`
 
     await writeFile(fileName, '', true)
 
     setInterval(async () => {
+        try {
+            const row: TickerRow = {
+                pair: pair,
+                interval: interval,
+                unix_time: Date.now(),
+                price: await getLastPrice(pair, exchange),
+                signal: await getIndicator(browser, pair, interval)
+            }
 
-        const row = {
-            pair: pair,
-            interval: interval,
-            unix_time: Date.now(),
-            price: await getLastPrice(pair, exchange),
-            signal: await getIndicator(browser, pair, interval)
+            console.info(row)
+            await appendFile(fileName, JSON.stringify(row) + "\n")
+
+        } catch(error: unknown) {
+            console.error('Failed to write row:', error)
         }
-
-        console.info(row)
-
-        await appendFile(fileName, JSON.stringify(row)+"\n")
-
-    }, delay*1000)
+    }, delay * 1000)
 }
 
 /**
- * Takes a .ndjson file path as input and generates estimated ROI based on the data provided. Meant to be used after using the logJsonTable() function
- * @param pathToNdjsonFile String representing the absolute or relative path to the NDJSON file we want to analyze
- * @param inverted Boolean that inverts the trades (short when BUY, and long when SELL), and calculates the profits accordingly
- * @returns An object returning the profit of each transaction, the sum of profits and the percentage of variation (all calculated considering operations on 1 unit of the given coin)
+ * Reads a .ndjson file produced by logJsonTable and estimates ROI per signal run.
+ * Strategy: enter at start of each signal run, exit when signal changes.
+ *   STRONG BUY → long x2 | BUY → long x1 | NEUTRAL → no position
+ *   SELL → short x1 | STRONG SELL → short x2
+ * @param pathToNdjsonFile Path to the .ndjson file to analyze
+ * @param inverted If true, all positions are reversed (short on BUY, long on SELL)
+ * @returns AnalysisResult with per-transaction profits, total sum and % variation, or undefined if no signal changes
  */
-async function analyseJsonTable(pathToNdjsonFile: string, inverted: boolean = false): Promise<object | void> {
+async function analyseJsonTable(pathToNdjsonFile: string, inverted: boolean = false): Promise<AnalysisResult | undefined> {
 
-    const data = await readOutputFile(pathToNdjsonFile) as Array<{ price: number, signal: string }>
+    const data = await readOutputFile(pathToNdjsonFile) as Array<TickerRow>
 
     let firstPrice: number | undefined
-    let lastPrice: number | undefined
     let absoluteFirstPrice: number | undefined
-
-    let globalProfit: number[] = []
+    const globalProfit: number[] = []
 
     for(let i = 1; i < data.length; i++) {
 
         const row = data.at(i)
         const nextRow = data.at(i + 1)
 
-        if(nextRow == undefined)
+        if(row === undefined || nextRow === undefined)
             break
 
-        const prices = {
-            current: row!.price,
-            next: nextRow.price
-        }
-        const recommendation = {
-            current: row!.signal,
-            next: nextRow.signal
+        if(i === 1) {
+            firstPrice = row.price
+            absoluteFirstPrice = row.price
         }
 
-        if(i == 1) {
-            firstPrice = prices.current
-            absoluteFirstPrice = prices.current
-        }
-
-        if(recommendation.current == recommendation.next) {
+        if(firstPrice === undefined || row.price === undefined)
             continue
-        } else {
-            lastPrice = prices.current
-            const currentLastPrice = lastPrice
-            let profit: number
 
-            switch(recommendation.current) {
-                case "BUY":
-                    profit = currentLastPrice - firstPrice!
-                    break
-                case "STRONG BUY":
-                    profit = (currentLastPrice - firstPrice!) * 2
-                    break
-                case "NEUTRAL":
-                    profit = 0
-                    break
-                case "SELL":
-                    profit = (currentLastPrice - firstPrice!) * (-1)
-                    break
-                case "STRONG SELL":
-                    profit = (currentLastPrice - firstPrice!) * (-2)
-                    break
-                default:
-                    profit = 0
-                    break
-            }
-
-            globalProfit.push(profit)
-
-            firstPrice = prices.next
-            lastPrice = undefined
+        if(row.signal === nextRow.signal)
             continue
+
+        const lastPrice = row.price
+        let profit: number
+
+        switch(row.signal) {
+            case 'BUY':
+                profit = lastPrice - firstPrice
+                break
+            case 'STRONG BUY':
+                profit = (lastPrice - firstPrice) * 2
+                break
+            case 'NEUTRAL':
+                profit = 0
+                break
+            case 'SELL':
+                profit = (lastPrice - firstPrice) * -1
+                break
+            case 'STRONG SELL':
+                profit = (lastPrice - firstPrice) * -2
+                break
+            default:
+                profit = 0
         }
 
+        globalProfit.push(profit)
+        firstPrice = nextRow.price
     }
 
-    try {
-        let profitSum = globalProfit.reduce((accumulator, currentValue) => accumulator + currentValue)
-        let profitVariation = ((globalProfit.reduce((accumulator, currentValue) => accumulator + currentValue) / absoluteFirstPrice!) * 100)
-
-        if(inverted) {
-            globalProfit = globalProfit.map((num) => -1 * num)
-            profitSum = -1 * profitSum
-            profitVariation = -1 * profitVariation
-        }
-
-        const results = {
-            profit_per_transaction: globalProfit,
-            sum: profitSum,
-            var: profitVariation+'%'
-        }
-
-        return results
-
-    } catch(error: unknown) {
-        console.warn("There is no change of signal in the given jsonc file. Therefore, it isn't possible to calculate a profit.")
+    if(globalProfit.length === 0) {
+        console.warn("There is no change of signal in the given file. Therefore, it isn't possible to calculate a profit.")
+        return undefined
     }
 
+    const profitSum = globalProfit.reduce((accumulator, currentValue) => accumulator + currentValue)
+    const profitVariation = (profitSum / absoluteFirstPrice!) * 100
+
+    const result: AnalysisResult = {
+        profit_per_transaction: inverted ? globalProfit.map(p => -1 * p) : globalProfit,
+        sum: inverted ? -1 * profitSum : profitSum,
+        var: (inverted ? -1 * profitVariation : profitVariation) + '%'
+    }
+
+    return result
 }
 
 /**
- * Returns true if the given interval string is valid, or false otherwise
- * @param interval The interval string we want to verify
- * @returns A boolean that states if the interval is correct or isn't
+ * Returns true if the given interval string is valid
  */
 function isValidInterval(interval: string): boolean {
     const validIntervals = ['1m', '5m', '15m', '30m', '1h', '2h', '4h', '1D', '1W', '1M']
@@ -218,19 +194,16 @@ function isValidInterval(interval: string): boolean {
 }
 
 /**
- * Check if a pair is valid by returning true if it is and false if it isn't. Works by trying to fetch the price of the given pair string and returning false in case of any exception
- * @param pair The pair string we want to test
- * @returns A boolean that confirms or not the condition
+ * Returns true if the pair exists on the exchange, false otherwise
  */
 async function isPairValid(pair: string): Promise<boolean> {
     try {
         await getLastPrice(pair)
+        return true
     } catch(error: unknown) {
         return false
     }
-    return true
 }
-
 
 export {
     getIndicator,
