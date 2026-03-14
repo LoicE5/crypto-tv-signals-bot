@@ -4,9 +4,15 @@ import puppeteer, { Browser } from "puppeteer"
 
 ;(async () => {
 
-    const browser: Browser = await puppeteer.launch()
-
+    const validCommands = ['analyze', 'simulate', 'write', 'log']
     const firstArgv = process.argv.at(2)
+
+    if(!firstArgv || !validCommands.includes(firstArgv)) {
+        console.error(`Invalid or missing command. Expected one of: ${validCommands.filter(c => c !== 'log').join(', ')}`)
+        process.exit(1)
+    }
+
+    const browser: Browser = await puppeteer.launch()
 
     // If the argv is Analyze
     if(firstArgv == 'analyze') {

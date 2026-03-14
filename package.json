@@ -6,7 +6,8 @@
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
     "lint": "eslint src/**/*.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "install:chrome": "bunx puppeteer browsers install chrome"
   },
   "dependencies": {
     "ccxt": "^4.4.80",
@@ -20,14 +21,6 @@
     "typescript": "^5.8.2"
   },
   "overrides": {
-    "basic-ftp": "^5.2.0",
-    "semver": "^7.5.2",
-    "minimatch": "^9.0.0",
-    "tar-fs": "^3.1.1",
-    "yauzl": "^3.2.1",
-    "brace-expansion": "^2.0.1"
-  },
-  "trustedDependencies": [
-    "ccxt"
-  ]
+    "yauzl": "^3.2.1"
+  }
 }

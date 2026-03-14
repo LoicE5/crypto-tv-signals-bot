@@ -1,4 +1,6 @@
 node_modules
-build/*
-output/*
+build/
+output/
 .DS_Store
+dist/
+OUTPUT.md
