@@ -2,9 +2,9 @@
   "name": "crypto-tv-signals-bot",
   "version": "1.0.0",
   "scripts": {
-    "build": "bun run build:x64 && bun run build:arm64",
-    "build:x64": "PROJ=\"$(pwd)\" && mkdir -p \"$PROJ/dist\" && cd /tmp && bun build \"$PROJ/src/index.ts\" --compile --target=bun-linux-x64 --outfile=\"$PROJ/dist/crypto-tv-signals-bot-x64\"",
-    "build:arm64": "PROJ=\"$(pwd)\" && mkdir -p \"$PROJ/dist\" && cd /tmp && bun build \"$PROJ/src/index.ts\" --compile --target=bun-linux-arm64 --outfile=\"$PROJ/dist/crypto-tv-signals-bot-arm64\"",
+    "build": "PROJ=\"$(pwd)\" && mkdir -p \"$PROJ/dist\" && cd /tmp && bun build \"$PROJ/src/index.ts\" --compile --outfile=\"$PROJ/dist/crypto-tv-signals-bot\"",
+    "build:linux-x64": "PROJ=\"$(pwd)\" && mkdir -p \"$PROJ/dist\" && cd /tmp && bun build \"$PROJ/src/index.ts\" --compile --target=bun-linux-x64 --outfile=\"$PROJ/dist/crypto-tv-signals-bot-linux-x64\"",
+    "build:linux-arm64": "PROJ=\"$(pwd)\" && mkdir -p \"$PROJ/dist\" && cd /tmp && bun build \"$PROJ/src/index.ts\" --compile --target=bun-linux-arm64 --outfile=\"$PROJ/dist/crypto-tv-signals-bot-linux-arm64\"",
     "typecheck": "tsc --noEmit",
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",

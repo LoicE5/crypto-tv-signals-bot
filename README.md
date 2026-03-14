@@ -122,9 +122,9 @@ Other available commands:
 bun test              # Run the test suite
 bun run lint          # Run ESLint
 bun run typecheck     # Type-check with tsc (no emit)
-bun run build         # Build Linux binaries (x64 + arm64) to ./dist/
-bun run build:x64     # Build x64 binary only
-bun run build:arm64   # Build arm64 binary only
+bun run build              # Build a binary for the current platform → dist/crypto-tv-signals-bot
+bun run build:linux-x64   # Build Linux x64 binary (used by CI) → dist/crypto-tv-signals-bot-linux-x64
+bun run build:linux-arm64 # Build Linux arm64 binary (used by CI) → dist/crypto-tv-signals-bot-linux-arm64
 ```
 
 ---

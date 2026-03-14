@@ -3,3 +3,4 @@ build/
 output/
 .DS_Store
 dist/
+.*-*.bun-build

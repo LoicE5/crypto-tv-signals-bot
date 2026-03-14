@@ -39,11 +39,11 @@ jobs:
           echo "$NOTES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Build x64 binary
-        run: bun run build:x64
+      - name: Build linux-x64 binary
+        run: bun run build:linux-x64
 
-      - name: Build arm64 binary
-        run: bun run build:arm64
+      - name: Build linux-arm64 binary
+        run: bun run build:linux-arm64
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -52,5 +52,5 @@ jobs:
           name: v${{ steps.version.outputs.value }}
           body: ${{ steps.changelog.outputs.notes }}
           files: |
-            dist/crypto-tv-signals-bot-x64
-            dist/crypto-tv-signals-bot-arm64
+            dist/crypto-tv-signals-bot-linux-x64
+            dist/crypto-tv-signals-bot-linux-arm64
