@@ -3,6 +3,7 @@ import { Exchange } from "ccxt"
 import { defaultExchange } from './exchanges'
 import { writeFile, appendFile, readJsoncOutputFile } from './tools'
 import fs from "fs"
+import { validIntervals } from "./constants"
 
 /**
  * Returns a string indicator ("BUY","SELL","NEUTRAL","STRONG BUY","STRONG SELL") from TradingView's widget
@@ -216,8 +217,7 @@ function analyseJsonTable(pathToJsoncFile: string, inverted: boolean = false): o
  * @returns A boolean that states if the interval is correct or isn't
  */
 function isValidInterval(interval: string): boolean {
-    const validIntervals = ['1m', '5m', '15m', '30m', '1h', '2h', '4h', '1D', '1W', '1M']
-    return validIntervals.includes(interval)
+    return validIntervals.has(interval)
 }
 
 /**
