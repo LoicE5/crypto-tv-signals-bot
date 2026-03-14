@@ -1,7 +1,7 @@
 import fs from "fs"
 
 function writeFile(path: string, content: string, consoleStatus: boolean = false): void {
-    fs.writeFile(path, content, (error) => {
+    fs.writeFile(path, content, (error: NodeJS.ErrnoException | null) => {
         if(error) throw error
         if(consoleStatus)
             console.info(`File ${path} created successfully`)
@@ -9,7 +9,7 @@ function writeFile(path: string, content: string, consoleStatus: boolean = false
 }
 
 function appendFile(path: string, content: string, consoleStatus: boolean = false): void {
-    fs.appendFile(path, content, (error) => {
+    fs.appendFile(path, content, (error: NodeJS.ErrnoException | null) => {
         if(error) throw error
         if(consoleStatus)
             console.info(`File ${path} updated successfully`)
