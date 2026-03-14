@@ -1,27 +1,28 @@
-import fs from "fs"
+import { appendFile as nodeAppendFile } from "node:fs"
 
-function writeFile(path: string, content: string, consoleStatus: boolean = false): void {
-    fs.writeFile(path, content, (error: NodeJS.ErrnoException | null) => {
-        if(error) throw error
-        if(consoleStatus)
-            console.info(`File ${path} created successfully`)
+async function writeFile(path: string, content: string, consoleStatus: boolean = false): Promise<void> {
+    await Bun.write(path, content)
+    if(consoleStatus)
+        console.info(`File ${path} created successfully`)
+}
+
+async function appendFile(path: string, content: string, consoleStatus: boolean = false): Promise<void> {
+    return new Promise((resolve, reject) => {
+        nodeAppendFile(path, content, (error: NodeJS.ErrnoException | null) => {
+            if(error) { reject(error); return }
+            if(consoleStatus)
+                console.info(`File ${path} updated successfully`)
+            resolve()
+        })
     })
 }
 
-function appendFile(path: string, content: string, consoleStatus: boolean = false): void {
-    fs.appendFile(path, content, (error: NodeJS.ErrnoException | null) => {
-        if(error) throw error
-        if(consoleStatus)
-            console.info(`File ${path} updated successfully`)
-    })
+async function readFile(path: string): Promise<string> {
+    return Bun.file(path).text()
 }
 
-function readFile(path: string): string {
-    return fs.readFileSync(path, { encoding: 'utf8' })
-}
-
-function readJsonFile(path: string): unknown {
-    const fileContent = readFile(path)
+async function readJsonFile(path: string): Promise<unknown> {
+    const fileContent = await readFile(path)
     return parseJsonc(fileContent)
 }
 
@@ -42,8 +43,8 @@ function replaceTrailingCommaFromJsonString(jsonString: string, newChar: string)
     return jsonString.replace(/.$/,newChar)
 }
 
-function readJsoncOutputFile(path: string): Array<object> {
-    let fileContent = readFile(path)
+async function readJsoncOutputFile(path: string): Promise<Array<object>> {
+    let fileContent = await readFile(path)
     fileContent = removeCommentsFromString(fileContent)
     fileContent = replaceTrailingCommaFromJsonString(fileContent, ']')
 

@@ -2,8 +2,7 @@ import puppeteer, { Browser } from "puppeteer"
 import { Exchange } from "ccxt"
 import { defaultExchange } from './exchanges'
 import { writeFile, appendFile, readJsoncOutputFile } from './tools'
-import fs from "fs"
-import { validIntervals } from "./constants"
+import { mkdir } from "node:fs/promises"
 
 /**
  * Returns a string indicator ("BUY","SELL","NEUTRAL","STRONG BUY","STRONG SELL") from TradingView's widget
@@ -75,7 +74,7 @@ async function getLastPrice(pair: string, exchange: Exchange = defaultExchange):
 }
 
 /**
- * Create a .jsonc file with a comment header and an empty array, that is periodically filled with JSON objects, each containing the signal and price of a cryptocurrency pair as well as the corresponding UNIX date.
+ * Create a .ndjson file that is periodically filled with one JSON object per line, each containing the signal and price of a cryptocurrency pair as well as the corresponding UNIX date.
  * @param browser The Puppeteer browser instance to use
  * @param pair The pair we want to get the data from (like "BTCUSDT")
  * @param interval The TradingView signal interval to use
@@ -84,16 +83,13 @@ async function getLastPrice(pair: string, exchange: Exchange = defaultExchange):
  */
 async function logJsonTable(browser: Browser, pair: string, interval: string, delay: number = 10, exchange: Exchange = defaultExchange): Promise<void> {
 
-    if(!fs.existsSync('./output'))
-        fs.mkdirSync('./output')
+    await mkdir('./output', { recursive: true })
 
     const date = new Date()
 
-    const fileName = `output/${pair}_${interval}_${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}.jsonc`
+    const fileName = `output/${pair}_${interval}_${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}.ndjson`
 
-    const head = `[`
-
-    writeFile(fileName, head, true)
+    await writeFile(fileName, '', true)
 
     setInterval(async () => {
 
@@ -107,20 +103,20 @@ async function logJsonTable(browser: Browser, pair: string, interval: string, de
 
         console.info(row)
 
-        appendFile(fileName, JSON.stringify(row)+`,`)
+        await appendFile(fileName, JSON.stringify(row)+"\n")
 
     }, delay*1000)
 }
 
 /**
- * Takes a .json or .jsonc file path as input and generates estimated ROI based on the data provided. Meant to be used after using the logJsonTable() function
- * @param pathToJsoncFile String representing the absolute or relative path to the JSON file we want to analyze
+ * Takes a .ndjson file path as input and generates estimated ROI based on the data provided. Meant to be used after using the logJsonTable() function
+ * @param pathToNdjsonFile String representing the absolute or relative path to the NDJSON file we want to analyze
  * @param inverted Boolean that inverts the trades (short when BUY, and long when SELL), and calculates the profits accordingly
  * @returns An object returning the profit of each transaction, the sum of profits and the percentage of variation (all calculated considering operations on 1 unit of the given coin)
  */
-function analyseJsonTable(pathToJsoncFile: string, inverted: boolean = false): object | void {
+async function analyseJsonTable(pathToNdjsonFile: string, inverted: boolean = false): Promise<object | void> {
 
-    const data = readJsoncOutputFile(pathToJsoncFile) as Array<{ price: number, signal: string }>
+    const data = await readJsoncOutputFile(pathToNdjsonFile) as Array<{ price: number, signal: string }>
 
     let firstPrice: number | undefined
     let lastPrice: number | undefined
@@ -217,7 +213,8 @@ function analyseJsonTable(pathToJsoncFile: string, inverted: boolean = false): o
  * @returns A boolean that states if the interval is correct or isn't
  */
 function isValidInterval(interval: string): boolean {
-    return validIntervals.has(interval)
+    const validIntervals = ['1m', '5m', '15m', '30m', '1h', '2h', '4h', '1D', '1W', '1M']
+    return validIntervals.includes(interval)
 }
 
 /**

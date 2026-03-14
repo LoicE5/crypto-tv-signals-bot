@@ -33,61 +33,41 @@ afterEach(() => {
 })
 
 describe("writeFile", () => {
-    it("creates a file with the given content", () => {
-        return new Promise<void>((resolve) => {
-            writeFile(TEST_FILE, "hello world")
-            setTimeout(() => {
-                expect(fs.existsSync(TEST_FILE)).toBe(true)
-                expect(fs.readFileSync(TEST_FILE, "utf8")).toBe("hello world")
-                resolve()
-            }, 100)
-        })
+    it("creates a file with the given content", async () => {
+        await writeFile(TEST_FILE, "hello world")
+        expect(fs.existsSync(TEST_FILE)).toBe(true)
+        expect(fs.readFileSync(TEST_FILE, "utf8")).toBe("hello world")
     })
 
-    it("overwrites an existing file", () => {
-        return new Promise<void>((resolve) => {
-            fs.writeFileSync(TEST_FILE, "old content")
-            writeFile(TEST_FILE, "new content")
-            setTimeout(() => {
-                expect(fs.readFileSync(TEST_FILE, "utf8")).toBe("new content")
-                resolve()
-            }, 100)
-        })
+    it("overwrites an existing file", async () => {
+        fs.writeFileSync(TEST_FILE, "old content")
+        await writeFile(TEST_FILE, "new content")
+        expect(fs.readFileSync(TEST_FILE, "utf8")).toBe("new content")
     })
 })
 
 describe("appendFile", () => {
-    it("appends content to an existing file", () => {
-        return new Promise<void>((resolve) => {
-            fs.writeFileSync(TEST_FILE, "start")
-            appendFile(TEST_FILE, "-end")
-            setTimeout(() => {
-                expect(fs.readFileSync(TEST_FILE, "utf8")).toBe("start-end")
-                resolve()
-            }, 100)
-        })
+    it("appends content to an existing file", async () => {
+        fs.writeFileSync(TEST_FILE, "start")
+        await appendFile(TEST_FILE, "-end")
+        expect(fs.readFileSync(TEST_FILE, "utf8")).toBe("start-end")
     })
 
-    it("creates a file if it doesn't exist and appends content", () => {
-        return new Promise<void>((resolve) => {
-            appendFile(TEST_FILE, "appended")
-            setTimeout(() => {
-                expect(fs.existsSync(TEST_FILE)).toBe(true)
-                expect(fs.readFileSync(TEST_FILE, "utf8")).toBe("appended")
-                resolve()
-            }, 100)
-        })
+    it("creates a file if it doesn't exist and appends content", async () => {
+        await appendFile(TEST_FILE, "appended")
+        expect(fs.existsSync(TEST_FILE)).toBe(true)
+        expect(fs.readFileSync(TEST_FILE, "utf8")).toBe("appended")
     })
 })
 
 describe("readFile", () => {
-    it("reads the content of a file as a string", () => {
+    it("reads the content of a file as a string", async () => {
         fs.writeFileSync(TEST_FILE, "test content")
-        expect(readFile(TEST_FILE)).toBe("test content")
+        expect(await readFile(TEST_FILE)).toBe("test content")
     })
 
-    it("throws when file does not exist", () => {
-        expect(() => readFile("/nonexistent/path/file.txt")).toThrow()
+    it("throws when file does not exist", async () => {
+        await expect(readFile("/nonexistent/path/file.txt")).rejects.toThrow()
     })
 })
 
@@ -134,24 +114,23 @@ describe("removeCommentsFromString", () => {
 })
 
 describe("readJsoncOutputFile", () => {
-    it("parses a .jsonc file with trailing comma (logJsonTable format) into an array", () => {
-        // logJsonTable format: starts with '[', each entry has a trailing comma, no closing bracket
+    it("parses a .jsonc file with trailing comma (legacy format) into an array", async () => {
         const content = `[{"pair":"BTCUSDT","price":50000,"signal":"BUY"},{"pair":"BTCUSDT","price":51000,"signal":"SELL"},`
         fs.writeFileSync(TEST_JSONC_FILE, content)
-        const result = readJsoncOutputFile(TEST_JSONC_FILE)
+        const result = await readJsoncOutputFile(TEST_JSONC_FILE)
         expect(Array.isArray(result)).toBe(true)
         expect(result.length).toBe(2)
     })
 
-    it("parses a .jsonc file without trailing comma into an array", () => {
+    it("parses a .jsonc file without trailing comma into an array", async () => {
         const content = `[{"pair":"BTCUSDT","price":50000,"signal":"BUY"}]`
         fs.writeFileSync(TEST_JSONC_FILE, content)
-        const result = readJsoncOutputFile(TEST_JSONC_FILE)
+        const result = await readJsoncOutputFile(TEST_JSONC_FILE)
         expect(Array.isArray(result)).toBe(true)
         expect(result.length).toBe(1)
     })
 
-    it("parses a .jsonc file with inline comments", () => {
+    it("parses a .jsonc file with inline comments", async () => {
         const content = `[
             // first entry
             {"pair":"BTCUSDT","price":50000,"signal":"BUY"},
@@ -159,16 +138,16 @@ describe("readJsoncOutputFile", () => {
             {"pair":"BTCUSDT","price":51000,"signal":"SELL"}
         ]`
         fs.writeFileSync(TEST_JSONC_FILE, content)
-        const result = readJsoncOutputFile(TEST_JSONC_FILE)
+        const result = await readJsoncOutputFile(TEST_JSONC_FILE)
         expect(Array.isArray(result)).toBe(true)
         expect(result.length).toBe(2)
     })
 })
 
 describe("readJsonFile", () => {
-    it("reads and parses a JSON file", () => {
+    it("reads and parses a JSON file", async () => {
         fs.writeFileSync(TEST_JSON_FILE, '{"name":"test","value":42}')
-        const result = readJsonFile(TEST_JSON_FILE)
+        const result = await readJsonFile(TEST_JSON_FILE)
         expect(result).toEqual({ name: "test", value: 42 })
     })
 })

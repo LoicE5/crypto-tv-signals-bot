@@ -54,7 +54,7 @@ describe("analyseJsonTable", () => {
         fs.writeFileSync(TEST_JSONC_FILE, content)
     }
 
-    it("calculates profit for BUY signal across multiple rows before a SELL", () => {
+    it("calculates profit for BUY signal across multiple rows before a SELL", async () => {
         // i=1: data[1]={BUY,100}, data[2]={BUY,110} - same, firstPrice=100, continue
         // i=2: data[2]={BUY,110}, data[3]={SELL,120} - change! lastPrice=110, profit=110-100=10
         writeTestJsonc([
@@ -64,14 +64,14 @@ describe("analyseJsonTable", () => {
             { pair: "BTCUSDT", interval: "1m", unix_time: 4000, price: 120, signal: "SELL" }, // data[3]: signal change! lastPrice=110
             { pair: "BTCUSDT", interval: "1m", unix_time: 5000, price: 115, signal: "SELL" }  // data[4]: last item
         ])
-        const result = analyseJsonTable(TEST_JSONC_FILE) as { profit_per_transaction: number[], sum: number, var: string }
+        const result = await analyseJsonTable(TEST_JSONC_FILE) as { profit_per_transaction: number[], sum: number, var: string }
         expect(result).toBeDefined()
         // BUY: profit = lastPrice(110) - firstPrice(100) = 10
         expect(result.profit_per_transaction).toEqual([10])
         expect(result.sum).toBe(10)
     })
 
-    it("calculates profit for STRONG BUY signal (doubled)", () => {
+    it("calculates profit for STRONG BUY signal (doubled)", async () => {
         // i=1: data[1]={STRONG BUY,100}, data[2]={STRONG BUY,110} - same, firstPrice=100, continue
         // i=2: data[2]={STRONG BUY,110}, data[3]={SELL,120} - change! lastPrice=110, profit=(110-100)*2=20
         writeTestJsonc([
@@ -81,14 +81,14 @@ describe("analyseJsonTable", () => {
             { pair: "BTCUSDT", interval: "1m", unix_time: 4000, price: 120, signal: "SELL" },
             { pair: "BTCUSDT", interval: "1m", unix_time: 5000, price: 115, signal: "SELL" }
         ])
-        const result = analyseJsonTable(TEST_JSONC_FILE) as { profit_per_transaction: number[], sum: number, var: string }
+        const result = await analyseJsonTable(TEST_JSONC_FILE) as { profit_per_transaction: number[], sum: number, var: string }
         expect(result).toBeDefined()
         // STRONG BUY: profit = (110 - 100) * 2 = 20
         expect(result.profit_per_transaction).toEqual([20])
         expect(result.sum).toBe(20)
     })
 
-    it("calculates zero profit for NEUTRAL signal", () => {
+    it("calculates zero profit for NEUTRAL signal", async () => {
         writeTestJsonc([
             { pair: "BTCUSDT", interval: "1m", unix_time: 1000, price: 90,  signal: "NEUTRAL" },
             { pair: "BTCUSDT", interval: "1m", unix_time: 2000, price: 100, signal: "NEUTRAL" },
@@ -96,14 +96,14 @@ describe("analyseJsonTable", () => {
             { pair: "BTCUSDT", interval: "1m", unix_time: 4000, price: 120, signal: "BUY" },
             { pair: "BTCUSDT", interval: "1m", unix_time: 5000, price: 125, signal: "BUY" }
         ])
-        const result = analyseJsonTable(TEST_JSONC_FILE) as { profit_per_transaction: number[], sum: number, var: string }
+        const result = await analyseJsonTable(TEST_JSONC_FILE) as { profit_per_transaction: number[], sum: number, var: string }
         expect(result).toBeDefined()
         // NEUTRAL always returns 0 profit
         expect(result.profit_per_transaction).toEqual([0])
         expect(result.sum).toBe(0)
     })
 
-    it("calculates profit for SELL signal (short position)", () => {
+    it("calculates profit for SELL signal (short position)", async () => {
         // SELL: profit = (lastPrice - firstPrice) * (-1)
         // If price drops during SELL: lastPrice < firstPrice → profit > 0
         writeTestJsonc([
@@ -113,14 +113,14 @@ describe("analyseJsonTable", () => {
             { pair: "BTCUSDT", interval: "1m", unix_time: 4000, price: 80,   signal: "BUY" },
             { pair: "BTCUSDT", interval: "1m", unix_time: 5000, price: 85,   signal: "BUY" }
         ])
-        const result = analyseJsonTable(TEST_JSONC_FILE) as { profit_per_transaction: number[], sum: number, var: string }
+        const result = await analyseJsonTable(TEST_JSONC_FILE) as { profit_per_transaction: number[], sum: number, var: string }
         expect(result).toBeDefined()
         // SELL: firstPrice=100, lastPrice=90, profit=(90-100)*(-1)=10
         expect(result.profit_per_transaction).toEqual([10])
         expect(result.sum).toBe(10)
     })
 
-    it("calculates profit for STRONG SELL signal (doubled short)", () => {
+    it("calculates profit for STRONG SELL signal (doubled short)", async () => {
         writeTestJsonc([
             { pair: "BTCUSDT", interval: "1m", unix_time: 1000, price: 120,  signal: "STRONG SELL" },
             { pair: "BTCUSDT", interval: "1m", unix_time: 2000, price: 100,  signal: "STRONG SELL" },
@@ -128,14 +128,14 @@ describe("analyseJsonTable", () => {
             { pair: "BTCUSDT", interval: "1m", unix_time: 4000, price: 80,   signal: "BUY" },
             { pair: "BTCUSDT", interval: "1m", unix_time: 5000, price: 85,   signal: "BUY" }
         ])
-        const result = analyseJsonTable(TEST_JSONC_FILE) as { profit_per_transaction: number[], sum: number, var: string }
+        const result = await analyseJsonTable(TEST_JSONC_FILE) as { profit_per_transaction: number[], sum: number, var: string }
         expect(result).toBeDefined()
         // STRONG SELL: firstPrice=100, lastPrice=90, profit=(90-100)*(-2)=20
         expect(result.profit_per_transaction).toEqual([20])
         expect(result.sum).toBe(20)
     })
 
-    it("inverts profits when inverted=true", () => {
+    it("inverts profits when inverted=true", async () => {
         writeTestJsonc([
             { pair: "BTCUSDT", interval: "1m", unix_time: 1000, price: 90,  signal: "BUY" },
             { pair: "BTCUSDT", interval: "1m", unix_time: 2000, price: 100, signal: "BUY" },
@@ -143,14 +143,14 @@ describe("analyseJsonTable", () => {
             { pair: "BTCUSDT", interval: "1m", unix_time: 4000, price: 120, signal: "SELL" },
             { pair: "BTCUSDT", interval: "1m", unix_time: 5000, price: 115, signal: "SELL" }
         ])
-        const result = analyseJsonTable(TEST_JSONC_FILE, true) as { profit_per_transaction: number[], sum: number, var: string }
+        const result = await analyseJsonTable(TEST_JSONC_FILE, true) as { profit_per_transaction: number[], sum: number, var: string }
         expect(result).toBeDefined()
         // BUY profit was 10, inverted it becomes -10
         expect(result.profit_per_transaction).toEqual([-10])
         expect(result.sum).toBe(-10)
     })
 
-    it("returns the variation as a percentage string ending with '%'", () => {
+    it("returns the variation as a percentage string ending with '%'", async () => {
         writeTestJsonc([
             { pair: "BTCUSDT", interval: "1m", unix_time: 1000, price: 90,  signal: "BUY" },
             { pair: "BTCUSDT", interval: "1m", unix_time: 2000, price: 100, signal: "BUY" },
@@ -158,7 +158,7 @@ describe("analyseJsonTable", () => {
             { pair: "BTCUSDT", interval: "1m", unix_time: 4000, price: 120, signal: "SELL" },
             { pair: "BTCUSDT", interval: "1m", unix_time: 5000, price: 115, signal: "SELL" }
         ])
-        const result = analyseJsonTable(TEST_JSONC_FILE) as { profit_per_transaction: number[], sum: number, var: string }
+        const result = await analyseJsonTable(TEST_JSONC_FILE) as { profit_per_transaction: number[], sum: number, var: string }
         expect(result).toBeDefined()
         expect(typeof result.var).toBe("string")
         expect(result.var.endsWith("%")).toBe(true)
@@ -166,17 +166,17 @@ describe("analyseJsonTable", () => {
         expect(result.var).toBe("10%")
     })
 
-    it("returns undefined (void) when there are no signal changes", () => {
+    it("returns undefined (void) when there are no signal changes", async () => {
         writeTestJsonc([
             { pair: "BTCUSDT", interval: "1m", unix_time: 1000, price: 100, signal: "BUY" },
             { pair: "BTCUSDT", interval: "1m", unix_time: 2000, price: 110, signal: "BUY" },
             { pair: "BTCUSDT", interval: "1m", unix_time: 3000, price: 120, signal: "BUY" }
         ])
-        const result = analyseJsonTable(TEST_JSONC_FILE)
+        const result = await analyseJsonTable(TEST_JSONC_FILE)
         expect(result).toBeUndefined()
     })
 
-    it("handles multiple signal transitions correctly", () => {
+    it("handles multiple signal transitions correctly", async () => {
         // First run: BUY at 100, 110; change to SELL at index 3 → firstPrice=100, lastPrice=110, profit=10
         // Second run: SELL at 120, 115; change to BUY at index 5 → firstPrice=120, lastPrice=115, profit=(115-120)*(-1)=5
         writeTestJsonc([
@@ -188,7 +188,7 @@ describe("analyseJsonTable", () => {
             { pair: "BTCUSDT", interval: "1m", unix_time: 6000, price: 105, signal: "BUY" },   // data[5]: change! lastPrice=115, profit=(115-120)*(-1)=5; firstPrice now=105
             { pair: "BTCUSDT", interval: "1m", unix_time: 7000, price: 108, signal: "BUY" }    // data[6]: last item
         ])
-        const result = analyseJsonTable(TEST_JSONC_FILE) as { profit_per_transaction: number[], sum: number, var: string }
+        const result = await analyseJsonTable(TEST_JSONC_FILE) as { profit_per_transaction: number[], sum: number, var: string }
         expect(result).toBeDefined()
         expect(result.profit_per_transaction.length).toBe(2)
         expect(result.profit_per_transaction.at(0)).toBe(10)
@@ -196,7 +196,7 @@ describe("analyseJsonTable", () => {
         expect(result.sum).toBe(15)
     })
 
-    it("throws when the file does not exist", () => {
-        expect(() => analyseJsonTable("/nonexistent/file.jsonc")).toThrow()
+    it("throws when the file does not exist", async () => {
+        await expect(analyseJsonTable("/nonexistent/file.jsonc")).rejects.toThrow()
     })
 })
