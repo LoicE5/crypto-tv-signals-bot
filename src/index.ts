@@ -1,69 +1,92 @@
-import { getLastPrice, getIndicator, logJsonTable, analyseJsonTable, isValidInterval, isPairValid } from './functions'
+import { validIntervals } from './constants'
+import { getLastPrice, getIndicator, logJsonTable, analyseJsonTable, isPairValid } from './functions'
 import { getValueFromArgv, isArgv } from './tools'
-import puppeteer from "puppeteer"
+import puppeteer, { Browser } from "puppeteer"
 
-(async () => {
+const validCommands = ['analyze', 'simulate', 'write', 'log']
+const firstArgv = process.argv.at(2)
 
-    const browser:puppeteer.Browser = await puppeteer.launch()
+if(!firstArgv || !validCommands.includes(firstArgv)) {
+    console.error(`Invalid or missing command. Expected one of: ${validCommands.filter(c => c !== 'log').join(', ')}`)
+    process.exit(1)
+}
 
-    const firstArgv = process.argv[2] // Get the first argument passed in the node CLI
-  
-    // If the argv is Analyze
-    if (firstArgv == 'analyze') {
-        const path = getValueFromArgv("--path", process.argv) as string // We get the value of the --path argv
-        const inverted = isArgv("--inverted", process.argv) // We determinate if --inverted have been written within the argv
-        
-        try {
-            console.log(analyseJsonTable(path, inverted)) // We try to print in the console the results of the JSON file analysis
-        } catch (e) {
-            console.error(`Please make sure that you have correctly entered your path. The given one is ${path}. \n\n Thrown error : ${e}`) // If the file does not exist, we show an error
-        }
-        
+// analyze does not require a browser
+if(firstArgv === 'analyze') {
+    const path = getValueFromArgv("--path", process.argv)
+    const inverted = isArgv("--inverted", process.argv)
+
+    if(!path) {
+        console.error("--path is required for the analyze command")
+        process.exit(1)
     }
 
-    // If the argv word is Simulate
-    if (firstArgv == 'simulate') {
-        const pair = getValueFromArgv("--pair", process.argv) as string // We get the pair as a string, such as "BTCUSDT"
-        const interval = getValueFromArgv("--interval", process.argv) as string || "1m" // We get the TradingView's signal interval to use ("1m", "4h", "1w"...)
-
-        // If the given interval doesn't fit the requirements (string not in the allowed values), we show an error noticing the user and stop the execution
-        if (!isValidInterval(interval)) {
-            console.error("The given interval is not valid")
-            return
-        }
-
-        // If the given pair doesn't fit the requirements (not correctly written), we show an error notifying the user and stop the execution
-        if (!await isPairValid(pair)) {
-            console.error("The given pair is not valid")
-            return
-        }
-
-        // We log the pair, the chosen interval, the latest price from Binance, and the given signal by TradingView
-        setInterval(async () => {
-            console.log(`Pair : ${pair} | Interval : ${interval} | Price : ${await getLastPrice(pair)} | Signal : ${await getIndicator(browser, pair, interval)}`)
-        }, 1000)
+    try {
+        console.info(await analyseJsonTable(path, inverted))
+    } catch(error: unknown) {
+        console.error(`Failed to analyze file at "${path}": ${error}`)
+        process.exit(1)
     }
 
-    // If the argv word is Log
-    if (firstArgv == 'write' || firstArgv == 'log') {
-        const pair = getValueFromArgv("--pair", process.argv) as string // We get the pair as a string, such as "BTCUSDT"
-        const interval = getValueFromArgv("--interval", process.argv) as string || "1m" // We get the TradingView's signal interval to use ("1m", "4h", "1w"...)
-        const delay = Number(getValueFromArgv("--delay", process.argv)) || 10 // We get the given int for the delay (set at 10 seconds by default) between each fetch
+    process.exit(0)
+}
 
-        // If the given pair doesn't fit the requirements (not correctly written), we show an error notifying the user and stop the execution
-        if (!isValidInterval(interval)) {
-            console.error("The given interval is not valid")
-            return
-        }
+const browser: Browser = await puppeteer.launch()
 
-        // We log the pair, the chosen interval, the latest price from Binance, and the given signal by TradingView
-        if (!await isPairValid(pair)) {
-            console.error("The given pair is not valid")
-            return
-        }
+process.on('SIGINT', async () => {
+    await browser.close()
+    process.exit(0)
+})
 
-        // We create the file and write the data in it
-        await logJsonTable(browser, pair, interval, delay)
+if(firstArgv === 'simulate') {
+    const pair = getValueFromArgv("--pair", process.argv)
+    const interval = getValueFromArgv("--interval", process.argv) ?? "1m"
+
+    if(!pair) {
+        console.error("--pair is required for the simulate command")
+        await browser.close()
+        process.exit(1)
     }
-    
-})()
+
+    if(!validIntervals.has(interval)) {
+        console.error(`Invalid interval "${interval}". Allowed: ${validIntervals.values().toArray().join(',')}`)
+        await browser.close()
+        process.exit(1)
+    }
+
+    if(!await isPairValid(pair)) {
+        console.error(`Invalid pair "${pair}". Make sure it exists on Binance.`)
+        await browser.close()
+        process.exit(1)
+    }
+
+    setInterval(async () => {
+        console.info(`Pair : ${pair} | Interval : ${interval} | Price : ${await getLastPrice(pair)} | Signal : ${await getIndicator(browser, pair, interval)}`)
+    }, 1000)
+}
+
+if(firstArgv === 'write' || firstArgv === 'log') {
+    const pair = getValueFromArgv("--pair", process.argv)
+    const interval = getValueFromArgv("--interval", process.argv) ?? "1m"
+    const delay = Number(getValueFromArgv("--delay", process.argv)) || 10
+
+    if(!pair) {
+        console.error("--pair is required for the write command")
+        await browser.close()
+        process.exit(1)
+    }
+
+    if(!validIntervals.has(interval)) {
+        console.error(`Invalid interval "${interval}". Allowed: ${validIntervals.values().toArray().join(',')}`)
+        await browser.close()
+        process.exit(1)
+    }
+
+    if(!await isPairValid(pair)) {
+        console.error(`Invalid pair "${pair}". Make sure it exists on Binance.`)
+        await browser.close()
+        process.exit(1)
+    }
+
+    await logJsonTable(browser, pair, interval, delay)
+}

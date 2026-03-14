@@ -1,100 +1,60 @@
-import fs from "fs"
+import { appendFile as nodeAppendFile } from "node:fs"
 
-function writeFile(path: string, content: any, consoleStatus:boolean=false):void {
-    fs.writeFile(path, content, (err) => {
-        if (err) throw err
-        if(consoleStatus)
-            console.log(`File ${path} created successfully`)
+export async function writeFile(path: string, content: string, consoleStatus: boolean = false): Promise<void> {
+    await Bun.write(path, content)
+    if(consoleStatus)
+        console.info(`File ${path} created successfully`)
+}
+
+export async function appendFile(path: string, content: string, consoleStatus: boolean = false): Promise<void> {
+    return new Promise((resolve, reject) => {
+        nodeAppendFile(path, content, (error: NodeJS.ErrnoException | null) => {
+            if (error)
+                return reject(error)
+            if(consoleStatus)
+                console.info(`File ${path} updated successfully`)
+            resolve()
+        })
     })
 }
 
-function appendFile(path:string, content:any, consoleStatus:boolean=false):void {
-    fs.appendFile(path, content, (err) => {
-        if (err) throw err
-        if(consoleStatus)
-            console.log(`File ${path} updated successfully`)
-    })
+export async function readFile(path: string): Promise<string> {
+    return Bun.file(path).text()
 }
 
-function readFile(path: string): string {
-    return fs.readFileSync(path,{encoding:'utf8'})
+export async function readOutputFile(path: string): Promise<Array<object>> {
+    const fileContent = await readFile(path)
+    return fileContent
+        .split('\n')
+        .filter(line => line.trim().length > 0)
+        .map(line => JSON.parse(line))
 }
 
-function readJsonFile(path: string): Object {
-    let fileContent = readFile(path)
-    return parseJsonc(fileContent)
-}
-
-function removeCommentsFromString(input: string) {
-    return input.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '')
-}
-
-function parseJsonc(jsoncString: string) {
-    return JSON.parse(jsoncString.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, ''))
-}
-
-function replaceTrailingCommaFromJsonString(jsonString: string, newChar: string): string {
-    let latestChar = jsonString.charAt(jsonString.length - 1)
-    
-    if (latestChar != ",")
-        return jsonString
-    
-    return jsonString.replace(/.$/,newChar)
-}
-
-function readJsoncOutputFile(path: string): Array<Object> { // Specific
-
-    let fileContent = readFile(path)
-    fileContent = removeCommentsFromString(fileContent)
-    fileContent = replaceTrailingCommaFromJsonString(fileContent, ']')
-    
-    return JSON.parse(fileContent)
-}
-
-function isJsonString(str:string):boolean {
+export function isJsonString(str: string): boolean {
     try {
-        JSON.parse(str);
-    } catch (e) {
-        return false;
+        JSON.parse(str)
+    } catch(error: unknown) {
+        return false
     }
-    return true;
+    return true
 }
 
-function isArray(input:any):boolean {
+export function isArray(input: unknown): boolean {
     return Array.isArray(input)
 }
 
-function isNull(input:any):boolean {
-    if (input == null || input == "" || input == undefined)
-        return true
-    else
-        return false
+export function isNull(input: unknown): boolean {
+    return input === null || input === undefined || input === ""
 }
 
-function getValueFromArgv(param: string, argv: Array<string>): string|boolean {
-    
-    for (let arg of argv) { // For every arg of the array
-        if (arg.includes(param))// If the current arg contains the given substring
-            return arg.replace(`${param}=`, '') // Return the value of the arg minus the substring
+export function getValueFromArgv(param: string, argv: string[]): string | null {
+    for(const arg of argv) {
+        if(arg.startsWith(`${param}=`))
+            return arg.slice(param.length + 1)
     }
-    return false
+    return null
 }
 
-function isArgv(param: string, argv: Array<string>): boolean {
+export function isArgv(param: string, argv: string[]): boolean {
     return argv.includes(param) || argv.includes(`${param}=true`)
-}
-
-export {
-    writeFile,
-    appendFile,
-    isJsonString,
-    isArray,
-    isNull,
-    readFile,
-    readJsonFile,
-    parseJsonc,
-    removeCommentsFromString,
-    readJsoncOutputFile,
-    getValueFromArgv,
-    isArgv
 }
