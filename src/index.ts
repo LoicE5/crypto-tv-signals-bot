@@ -7,7 +7,7 @@ const validCommands = ['analyze', 'simulate', 'write', 'log']
 const firstArgv = process.argv.at(2)
 
 if(!firstArgv || !validCommands.includes(firstArgv)) {
-    console.error(`Invalid or missing command. Expected one of: ${validCommands.filter(c => c !== 'log').join(', ')}`)
+    console.error(`Invalid or missing command. Expected one of: ${validCommands.filter(command => command !== 'log').join(', ')}`)
     process.exit(1)
 }
 

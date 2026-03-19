@@ -16,7 +16,7 @@ import {
 
 // ── Analyze section ────────────────────────────────────────────────────────────
 
-function AnalyzeSection({ intervals: _intervals }: { intervals: string[] }) {
+function AnalyzeSection() {
     const [files, setFiles] = useState<string[]>([])
     const [selectedFile, setSelectedFile] = useState('')
     const [inverted, setInverted] = useState(false)
@@ -30,7 +30,7 @@ function AnalyzeSection({ intervals: _intervals }: { intervals: string[] }) {
                 setFiles(found)
                 if(found.length > 0) setSelectedFile(found.at(0)!)
             })
-            .catch(() => setError('Could not load file list'))
+            .catch((fetchError: unknown) => { console.error('Could not load file list:', fetchError); setError('Could not load file list') })
     }, [])
 
     async function handleAnalyze() {
@@ -337,7 +337,7 @@ export default function Dashboard() {
                 <span className={styles.badge}>alpha</span>
             </header>
 
-            <AnalyzeSection intervals={intervals} />
+            <AnalyzeSection />
             <PriceSection />
             <SessionSection intervals={intervals} />
         </main>

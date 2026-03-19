@@ -77,7 +77,7 @@ export async function getLastPrice(pair: string, exchange: Exchange = defaultExc
  * @param delay Seconds between each fetch and write (default: 10)
  * @param exchange CCXT exchange instance to use (default: Binance)
  */
-export async function logJsonTable(browser: Browser, pair: string, interval: string, delay: number = 10, exchange: Exchange = defaultExchange): Promise<void> {
+export async function logJsonTable(browser: Browser, pair: string, interval: string, delay: number = 10, exchange: Exchange = defaultExchange): Promise<ReturnType<typeof setInterval>> {
 
     await mkdir('./output', { recursive: true })
 
@@ -86,7 +86,7 @@ export async function logJsonTable(browser: Browser, pair: string, interval: str
 
     await writeFile(fileName, '', true)
 
-    setInterval(async () => {
+    return setInterval(async () => {
         try {
             const row: TickerRow = {
                 pair: pair,
@@ -178,7 +178,7 @@ export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boole
     const profitVariation = (profitSum / absoluteFirstPrice) * 100
 
     const result: AnalysisResult = {
-        profit_per_transaction: inverted ? globalProfit.map(p => -1 * p) : globalProfit,
+        profit_per_transaction: inverted ? globalProfit.map(profit => -1 * profit) : globalProfit,
         sum: inverted ? -1 * profitSum : profitSum,
         var: (inverted ? -1 * profitVariation : profitVariation) + '%'
     }

@@ -1,4 +1,4 @@
-import { analyseJsonTable, getLastPrice, getIndicator, logJsonTable } from './src/functions'
+import { analyseJsonTable, getLastPrice, getIndicator, logJsonTable, isPairValid } from './src/functions'
 import { validIntervals } from './src/constants'
 import type { Browser } from 'puppeteer'
 import { version } from './package.json'
@@ -83,7 +83,8 @@ export async function handler(request: Request): Promise<Response> {
         let body: { path?: string, inverted?: boolean }
         try {
             body = await request.json() as { path?: string, inverted?: boolean }
-        } catch {
+        } catch(parseError: unknown) {
+            console.error('Failed to parse request body:', parseError)
             return badRequest('Invalid JSON body')
         }
         const { path, inverted = false } = body
@@ -104,29 +105,30 @@ export async function handler(request: Request): Promise<Response> {
         let body: { command?: string, pair?: string, interval?: string, delay?: number }
         try {
             body = await request.json() as { command?: string, pair?: string, interval?: string, delay?: number }
-        } catch {
+        } catch(parseError: unknown) {
+            console.error('Failed to parse request body:', parseError)
             return badRequest('Invalid JSON body')
         }
         const { command, pair, interval = '1m', delay = 10 } = body
-        if(!command || !['simulate', 'write'].includes(command))
+        if(command !== 'simulate' && command !== 'write')
             return badRequest('command must be "simulate" or "write"')
         if(!pair) return badRequest('pair is required')
         if(!validIntervals.has(interval)) return badRequest(`Invalid interval "${interval}"`)
+        if(!await isPairValid(pair)) return json({ error: `Invalid pair "${pair}"` }, 400)
 
         try {
             const puppeteer = await import('puppeteer')
             sessionBrowser = await puppeteer.default.launch()
-            activeSession = { command: command as 'simulate' | 'write', pair, interval, delay, startedAt: Date.now() }
+            activeSession = { command, pair, interval, delay, startedAt: Date.now() }
 
             if(command === 'simulate') {
-                const browser = sessionBrowser as Browser
                 sessionIntervalId = setInterval(async () => {
                     const price = await getLastPrice(pair)
-                    const signal = await getIndicator(browser, pair, interval)
+                    const signal = await getIndicator(sessionBrowser as Browser, pair, interval)
                     console.info(`[simulate] ${pair} | ${interval} | ${price} | ${signal}`)
                 }, 1000)
             } else {
-                logJsonTable(sessionBrowser, pair, interval, delay)
+                sessionIntervalId = await logJsonTable(sessionBrowser, pair, interval, delay)
             }
 
             return json({ session: activeSession })
