@@ -5,3 +5,4 @@ output/
 dist/
 .*-*.bun-build
 PROMPT.md
+REPORT.md
