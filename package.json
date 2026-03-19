@@ -1,6 +1,6 @@
 {
   "name": "crypto-tv-signals-bot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "scripts": {
     "build": "bun run scripts/build.ts",
     "build:linux-x64": "bun run scripts/build.ts linux-x64 && bun postbuild",

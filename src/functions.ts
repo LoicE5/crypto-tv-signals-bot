@@ -4,7 +4,7 @@ import { defaultExchange } from './exchanges'
 import { writeFile, appendFile, readOutputFile } from './tools'
 import { TickerRow, AnalysisResult, SignalValue } from './interfaces'
 import { mkdir } from "node:fs/promises"
-import { validIntervals } from "./constants"
+import { validIntervals, EXCHANGE_FEES } from "./constants"
 
 /**
  * Returns a signal indicator from TradingView's Technical Analysis Widget
@@ -105,21 +105,39 @@ export async function logJsonTable(browser: Browser, pair: string, interval: str
     }, delay * 1000)
 }
 
+// Computes net profit for a completed signal run, after subtracting round-trip fees.
+// feeRate applies on both entry and exit, scaled by position leverage.
+function calculateSignalProfit(signal: SignalValue | undefined, firstPrice: number, lastPrice: number, feeRate: number): number {
+    const delta = lastPrice - firstPrice
+    const baseFee = feeRate * (firstPrice + lastPrice)
+    switch(signal) {
+        case 'BUY':        return delta - baseFee
+        case 'STRONG BUY': return (delta - baseFee) * 2
+        case 'NEUTRAL':    return 0
+        case 'SELL':       return -delta - baseFee
+        case 'STRONG SELL':return (-delta - baseFee) * 2
+        default:           return 0
+    }
+}
+
 /**
  * Reads a .ndjson file produced by logJsonTable and estimates ROI per signal run.
  * Strategy: enter at start of each signal run, exit when signal changes.
  *   STRONG BUY → long x2 | BUY → long x1 | NEUTRAL → no position
  *   SELL → short x1 | STRONG SELL → short x2
+ * Open positions at end of file are closed at the last available price.
  * @param pathToNdjsonFile Path to the .ndjson file to analyze
  * @param inverted If true, all positions are reversed (short on BUY, long on SELL)
- * @returns AnalysisResult with per-transaction profits, total sum and % variation, or undefined if no signal changes
+ * @param feeRate Round-trip taker fee per trade as a decimal (default: exchange fee for configured exchange)
+ * @returns AnalysisResult with per-transaction profits, total sum and % variation, or undefined if insufficient data
  */
-export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boolean = false): Promise<AnalysisResult | undefined> {
+export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boolean = false, feeRate: number = EXCHANGE_FEES[defaultExchange.id] ?? 0): Promise<AnalysisResult | undefined> {
 
     const data = await readOutputFile(pathToNdjsonFile) as Array<TickerRow>
 
     let firstPrice: number | undefined
     let absoluteFirstPrice: number | undefined
+    let currentSignal: SignalValue | undefined
     const globalProfit: number[] = []
 
     for(let i = 1; i < data.length; i++) {
@@ -133,6 +151,7 @@ export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boole
         if(i === 1) {
             firstPrice = row.price
             absoluteFirstPrice = row.price
+            currentSignal = row.signal
         }
 
         if(firstPrice === undefined || row.price === undefined)
@@ -142,30 +161,21 @@ export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boole
             continue
 
         const lastPrice = row.price
-        let profit: number
-
-        switch(row.signal) {
-            case 'BUY':
-                profit = lastPrice - firstPrice
-                break
-            case 'STRONG BUY':
-                profit = (lastPrice - firstPrice) * 2
-                break
-            case 'NEUTRAL':
-                profit = 0
-                break
-            case 'SELL':
-                profit = (lastPrice - firstPrice) * -1
-                break
-            case 'STRONG SELL':
-                profit = (lastPrice - firstPrice) * -2
-                break
-            default:
-                profit = 0
-        }
-
-        globalProfit.push(profit)
+        globalProfit.push(calculateSignalProfit(row.signal, firstPrice, lastPrice, feeRate))
         firstPrice = nextRow.price
+        currentSignal = nextRow.signal
+    }
+
+    // Close any open position at the last data point
+    const lastRow = data.at(-1)
+    if(
+        firstPrice !== undefined &&
+        currentSignal !== undefined &&
+        currentSignal !== 'NEUTRAL' &&
+        currentSignal !== 'ERROR' &&
+        lastRow?.price !== undefined
+    ) {
+        globalProfit.push(calculateSignalProfit(currentSignal, firstPrice, lastRow.price, feeRate))
     }
 
     if(globalProfit.length === 0) {
@@ -174,10 +184,12 @@ export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boole
     }
 
     const profitSum = globalProfit.reduce((accumulator, currentValue) => accumulator + currentValue)
-    const profitVariation = (profitSum / absoluteFirstPrice!) * 100
+    const profitVariation = absoluteFirstPrice !== undefined && absoluteFirstPrice !== 0
+        ? (profitSum / absoluteFirstPrice) * 100
+        : 0
 
     const result: AnalysisResult = {
-        profit_per_transaction: inverted ? globalProfit.map(p => -1 * p) : globalProfit,
+        profit_per_transaction: inverted ? globalProfit.map(profit => -1 * profit) : globalProfit,
         sum: inverted ? -1 * profitSum : profitSum,
         var: (inverted ? -1 * profitVariation : profitVariation) + '%'
     }
