@@ -58,7 +58,8 @@ export async function startSession(command: string, pair: string, interval: stri
     })
     const data = await response.json() as { session?: Session, error?: string }
     if(data.error) throw new Error(data.error)
-    return data.session!
+    if(!data.session) throw new Error('No session returned by server')
+    return data.session
 }
 
 export async function stopSession(): Promise<void> {
