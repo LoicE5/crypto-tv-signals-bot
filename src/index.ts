@@ -61,7 +61,11 @@ if(firstArgv === 'simulate') {
     }
 
     setInterval(async () => {
-        console.info(`Pair : ${pair} | Interval : ${interval} | Price : ${await getLastPrice(pair)} | Signal : ${await getIndicator(browser, pair, interval)}`)
+        try {
+            console.info(`Pair : ${pair} | Interval : ${interval} | Price : ${await getLastPrice(pair)} | Signal : ${await getIndicator(browser, pair, interval)}`)
+        } catch(simulateError: unknown) {
+            console.error('Simulate tick failed:', simulateError)
+        }
     }, 1000)
 }
 
