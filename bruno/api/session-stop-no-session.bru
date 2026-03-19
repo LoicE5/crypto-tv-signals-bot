@@ -1,0 +1,19 @@
+meta {
+  name: Session Stop - No Active Session (error case)
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/session/stop
+}
+
+tests {
+  test("returns 404 when no session is active", function() {
+    expect(res.status).to.equal(404)
+  })
+
+  test("error message is present", function() {
+    expect(res.body.error).to.be.a("string")
+  })
+}

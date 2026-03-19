@@ -1,0 +1,4 @@
+{"pair":"BTCUSDT","interval":"1m","unix_time":1000,"price":100,"signal":"BUY"}
+{"pair":"BTCUSDT","interval":"1m","unix_time":2000,"price":110,"signal":"BUY"}
+{"pair":"BTCUSDT","interval":"1m","unix_time":3000,"price":120,"signal":"SELL"}
+{"pair":"BTCUSDT","interval":"1m","unix_time":4000,"price":115,"signal":"SELL"}

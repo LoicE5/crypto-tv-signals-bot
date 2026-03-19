@@ -1,0 +1,32 @@
+meta {
+  name: Analyze NDJSON File
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/analyze
+  body: json
+}
+
+body:json {
+  {
+    "path": "{{testNdjsonPath}}",
+    "inverted": false
+  }
+}
+
+tests {
+  test("returns 200", function() {
+    expect(res.status).to.equal(200)
+  })
+
+  test("result has expected shape or is null", function() {
+    const result = res.body.result
+    if(result !== null) {
+      expect(typeof result.sum).to.equal("number")
+      expect(result.var).to.match(/%$/)
+      expect(Array.isArray(result.profit_per_transaction)).to.be.true
+    }
+  })
+}

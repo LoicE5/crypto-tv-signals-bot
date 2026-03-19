@@ -13,7 +13,12 @@
     "start": "bun src/index.ts",
     "lint": "eslint src/**/*.ts",
     "test": "bun test",
-    "install:chrome": "bunx puppeteer browsers install chrome"
+    "install:chrome": "bunx puppeteer browsers install chrome",
+    "server": "bun server.ts",
+    "server:dev": "bun --watch server.ts",
+    "frontend:dev": "cd web/frontend && bun run dev",
+    "test:all": "bun test test/ && cd web/frontend && bun test",
+    "bruno": "cd bruno && bru run api --env local"
   },
   "dependencies": {
     "ccxt": "^4.4.80",
