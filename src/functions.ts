@@ -204,7 +204,7 @@ export async function isPairValid(pair: string): Promise<boolean> {
     try {
         await getLastPrice(pair)
         return true
-    } catch(error: unknown) {
+    } catch {
         return false
     }
 }
