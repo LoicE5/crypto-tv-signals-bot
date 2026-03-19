@@ -7,7 +7,7 @@ const validCommands = ['analyze', 'simulate', 'write', 'log']
 const firstArgv = process.argv.at(2)
 
 if(!firstArgv || !validCommands.includes(firstArgv)) {
-    console.error(`Invalid or missing command. Expected one of: ${validCommands.filter(c => c !== 'log').join(', ')}`)
+    console.error(`Invalid or missing command. Expected one of: ${validCommands.filter(command => command !== 'log').join(', ')}`)
     process.exit(1)
 }
 
@@ -15,14 +15,21 @@ if(!firstArgv || !validCommands.includes(firstArgv)) {
 if(firstArgv === 'analyze') {
     const path = getValueFromArgv("--path", process.argv)
     const inverted = isArgv("--inverted", process.argv)
+    const amountStr = getValueFromArgv("--amount", process.argv)
+    const amount = amountStr !== null ? Number(amountStr) : undefined
 
     if(!path) {
         console.error("--path is required for the analyze command")
         process.exit(1)
     }
 
+    if(amount !== undefined && (isNaN(amount) || amount <= 0)) {
+        console.error("--amount must be a positive number")
+        process.exit(1)
+    }
+
     try {
-        console.info(await analyseJsonTable(path, inverted))
+        console.info(await analyseJsonTable(path, inverted, undefined, amount))
     } catch(error: unknown) {
         console.error(`Failed to analyze file at "${path}": ${error}`)
         process.exit(1)
@@ -61,7 +68,11 @@ if(firstArgv === 'simulate') {
     }
 
     setInterval(async () => {
-        console.info(`Pair : ${pair} | Interval : ${interval} | Price : ${await getLastPrice(pair)} | Signal : ${await getIndicator(browser, pair, interval)}`)
+        try {
+            console.info(`Pair : ${pair} | Interval : ${interval} | Price : ${await getLastPrice(pair)} | Signal : ${await getIndicator(browser, pair, interval)}`)
+        } catch(simulateError: unknown) {
+            console.error('Simulate tick failed:', simulateError)
+        }
     }, 1000)
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "crypto-tv-signals-bot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "scripts": {
     "build": "bun run scripts/build.ts",
     "build:linux-x64": "bun run scripts/build.ts linux-x64 && bun postbuild",
@@ -11,6 +11,9 @@
     "typecheck": "tsc --noEmit",
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
+    "analyze": "bun run start analyze",
+    "simulate": "bun run start simulate",
+    "write": "bun run start write",
     "lint": "eslint src/**/*.ts",
     "test": "bun test",
     "install:chrome": "bunx puppeteer browsers install chrome"
@@ -28,6 +31,7 @@
     "typescript": "^5.8.2"
   },
   "overrides": {
-    "yauzl": "^3.2.1"
+    "yauzl": "^3.2.1",
+    "flatted": "^3.4.2"
   }
 }

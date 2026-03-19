@@ -92,6 +92,12 @@ bun start analyze --path=/home/user/data/ETHUSDT_4h_1-1-2026.ndjson
 
 # Inverted with flag=true syntax
 bun start analyze --path=./output/SOLUSDT_1D_14-3-2026.ndjson --inverted=true
+
+# With a 100 USDT investment per trade (profits expressed in USDT, var as % of 100 USDT)
+bun start analyze --path=./output/BTCUSDT_1m_14-3-2026.ndjson --amount=100
+
+# With a 0.5 ETH investment per trade for a LTC/ETH pair
+bun start analyze --path=./output/LTCETH_1m_14-3-2026.ndjson --amount=0.5
 ```
 
 ---
@@ -105,6 +111,7 @@ bun start analyze --path=./output/SOLUSDT_1D_14-3-2026.ndjson --inverted=true
 | `--delay` | write | Seconds between each fetch and write | Any number — below 1 or above 600 is not recommended | `10` |
 | `--path` | analyze | Path to a `.ndjson` file to analyze | Any valid file path | required |
 | `--inverted` | analyze | Invert all positions (short on BUY, long on SELL) | flag or `=true` | `false` |
+| `--amount` | analyze | Investment per trade in quote currency (e.g. USDT for BTCUSDT, ETH for CAKEETH, BTC for BCHBTC). Profits are scaled accordingly; `var` becomes total profit as % of this amount. When omitted, profits are per 1 unit of base currency. | Any positive number | omitted |
 
 ---
 

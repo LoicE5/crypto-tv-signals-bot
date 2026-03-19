@@ -4,3 +4,5 @@ output/
 .DS_Store
 dist/
 .*-*.bun-build
+PROMPT.md
+REPORT.md
