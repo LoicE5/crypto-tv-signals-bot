@@ -26,4 +26,4 @@ COPY tsconfig.json ./
 
 RUN mkdir -p ./output
 
-ENTRYPOINT ["bun", "src/index.ts"]
+CMD ["bun", "src/index.ts"]

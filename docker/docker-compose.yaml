@@ -6,7 +6,10 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    command: write --pair BTCUSDT --interval 1m
+    entrypoint: ""
+    command: sh
+    stdin_open: true
+    tty: true
     environment:
       # Required for Chromium inside Docker (no user-namespace sandbox available)
       - PUPPETEER_NO_SANDBOX=true
