@@ -178,7 +178,7 @@ function PriceSection() {
 function SessionSection({ intervals }: { intervals: string[] }) {
     const [command, setCommand] = useState<'simulate' | 'write'>('simulate')
     const [pair, setPair] = useState('BTCUSDT')
-    const [interval, setInterval] = useState('1m')
+    const [selectedInterval, setSelectedInterval] = useState('1m')
     const [delay, setDelay] = useState(10)
     const [session, setSession] = useState<Session | null>(null)
     const [loading, setLoading] = useState(false)
@@ -201,7 +201,7 @@ function SessionSection({ intervals }: { intervals: string[] }) {
         setLoading(true)
         setError('')
         try {
-            const started = await startSession(command, pair.trim().toUpperCase(), interval, delay)
+            const started = await startSession(command, pair.trim().toUpperCase(), selectedInterval, delay)
             setSession(started)
         } catch(startError: unknown) {
             setError(String(startError))
@@ -256,8 +256,8 @@ function SessionSection({ intervals }: { intervals: string[] }) {
                     <label htmlFor="session-interval">Interval</label>
                     <select
                         id="session-interval"
-                        value={interval}
-                        onChange={event => setInterval(event.target.value)}
+                        value={selectedInterval}
+                        onChange={event => setSelectedInterval(event.target.value)}
                         disabled={session !== null}
                     >
                         {intervals.map(value => (

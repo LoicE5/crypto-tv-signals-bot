@@ -43,7 +43,7 @@ function badRequest(message: string): Response {
 
 async function stopSession(): Promise<void> {
     if(sessionIntervalId !== null) clearInterval(sessionIntervalId)
-    if(sessionBrowser !== null) await sessionBrowser.close().catch(() => {})
+    if(sessionBrowser !== null) await sessionBrowser.close().catch((closeError: unknown) => console.error('Browser close error:', closeError))
     activeSession = null
     sessionBrowser = null
     sessionIntervalId = null
@@ -118,9 +118,10 @@ export async function handler(request: Request): Promise<Response> {
             activeSession = { command: command as 'simulate' | 'write', pair, interval, delay, startedAt: Date.now() }
 
             if(command === 'simulate') {
+                const browser = sessionBrowser as Browser
                 sessionIntervalId = setInterval(async () => {
                     const price = await getLastPrice(pair)
-                    const signal = await getIndicator(sessionBrowser!, pair, interval)
+                    const signal = await getIndicator(browser, pair, interval)
                     console.info(`[simulate] ${pair} | ${interval} | ${price} | ${signal}`)
                 }, 1000)
             } else {
