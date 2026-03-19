@@ -9,7 +9,7 @@ export async function writeFile(path: string, content: string, consoleStatus: bo
 export async function appendFile(path: string, content: string, consoleStatus: boolean = false): Promise<void> {
     return new Promise((resolve, reject) => {
         nodeAppendFile(path, content, (error: NodeJS.ErrnoException | null) => {
-            if (error)
+            if(error)
                 return reject(error)
             if(consoleStatus)
                 console.info(`File ${path} updated successfully`)

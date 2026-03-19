@@ -8,5 +8,5 @@ export const EXCHANGE_FEES: Record<string, number> = {
     kraken: 0.0026,
     coinbase: 0.004,
     kucoin: 0.001,
-    bitfinex: 0
+    bitfinex: 0.002
 }
