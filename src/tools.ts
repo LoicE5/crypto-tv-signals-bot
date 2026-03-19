@@ -33,7 +33,7 @@ export async function readOutputFile(path: string): Promise<Array<object>> {
 export function isJsonString(str: string): boolean {
     try {
         JSON.parse(str)
-    } catch(error: unknown) {
+    } catch {
         return false
     }
     return true
