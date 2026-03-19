@@ -1,6 +1,7 @@
 import { analyseJsonTable, getLastPrice, getIndicator, logJsonTable } from './src/functions'
 import { validIntervals } from './src/constants'
 import type { Browser } from 'puppeteer'
+import { version } from './package.json'
 
 const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
@@ -57,7 +58,7 @@ export async function handler(request: Request): Promise<Response> {
         return new Response(null, { status: 204, headers: CORS_HEADERS })
 
     if(pathname === '/api/health' && request.method === 'GET')
-        return json({ status: 'ok', version: '1.0.0' })
+        return json({ status: 'ok', version })
 
     if(pathname === '/api/intervals' && request.method === 'GET')
         return json({ intervals: [...validIntervals] })
