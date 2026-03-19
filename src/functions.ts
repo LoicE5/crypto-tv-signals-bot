@@ -140,15 +140,13 @@ export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boole
     let currentSignal: SignalValue | undefined
     const globalProfit: number[] = []
 
-    for(let i = 1; i < data.length; i++) {
-
-        const row = data.at(i)
-        const nextRow = data.at(i + 1)
+    for(const [index, row] of data.entries()) {
+        const nextRow = data.at(index + 1)
 
         if(row === undefined || nextRow === undefined)
             break
 
-        if(i === 1) {
+        if(index === 0) {
             firstPrice = row.price
             absoluteFirstPrice = row.price
             currentSignal = row.signal
