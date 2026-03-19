@@ -11,6 +11,9 @@
     "typecheck": "tsc --noEmit",
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
+    "analyze": "bun run start analyze",
+    "simulate": "bun run start simulate",
+    "write": "bun run start write",
     "lint": "eslint src/**/*.ts",
     "test": "bun test",
     "install:chrome": "bunx puppeteer browsers install chrome"

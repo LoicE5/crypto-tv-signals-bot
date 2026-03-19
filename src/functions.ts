@@ -129,9 +129,12 @@ function calculateSignalProfit(signal: SignalValue | undefined, firstPrice: numb
  * @param pathToNdjsonFile Path to the .ndjson file to analyze
  * @param inverted If true, all positions are reversed (short on BUY, long on SELL)
  * @param feeRate Round-trip taker fee per trade as a decimal (default: exchange fee for configured exchange)
+ * @param amount If provided, profits are scaled to this quote-currency investment per trade (e.g. 100 USDT for BTCUSDT).
+ *               The var field then represents total profit as a percentage of the amount.
+ *               When omitted, profits are expressed per 1 unit of base currency.
  * @returns AnalysisResult with per-transaction profits, total sum and % variation, or undefined if insufficient data
  */
-export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boolean = false, feeRate: number = EXCHANGE_FEES[defaultExchange.id] ?? 0): Promise<AnalysisResult | undefined> {
+export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boolean = false, feeRate: number = EXCHANGE_FEES[defaultExchange.id] ?? 0, amount: number | undefined = undefined): Promise<AnalysisResult | undefined> {
 
     const data = await readOutputFile(pathToNdjsonFile) as Array<TickerRow>
 
@@ -159,7 +162,8 @@ export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boole
             continue
 
         const lastPrice = row.price
-        globalProfit.push(calculateSignalProfit(row.signal, firstPrice, lastPrice, feeRate))
+        const rawProfit = calculateSignalProfit(row.signal, firstPrice, lastPrice, feeRate)
+        globalProfit.push(amount !== undefined ? rawProfit * (amount / firstPrice) : rawProfit)
         firstPrice = nextRow.price
         currentSignal = nextRow.signal
     }
@@ -173,7 +177,8 @@ export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boole
         currentSignal !== 'ERROR' &&
         lastRow?.price !== undefined
     ) {
-        globalProfit.push(calculateSignalProfit(currentSignal, firstPrice, lastRow.price, feeRate))
+        const rawProfit = calculateSignalProfit(currentSignal, firstPrice, lastRow.price, feeRate)
+        globalProfit.push(amount !== undefined ? rawProfit * (amount / firstPrice) : rawProfit)
     }
 
     if(globalProfit.length === 0) {
@@ -182,9 +187,11 @@ export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boole
     }
 
     const profitSum = globalProfit.reduce((accumulator: number, currentValue: number): number => accumulator + currentValue)
-    const profitVariation = absoluteFirstPrice !== undefined && absoluteFirstPrice !== 0
-        ? (profitSum / absoluteFirstPrice) * 100
-        : 0
+    const profitVariation = amount !== undefined
+        ? (profitSum / amount) * 100
+        : absoluteFirstPrice !== undefined && absoluteFirstPrice !== 0
+            ? (profitSum / absoluteFirstPrice) * 100
+            : 0
 
     const result: AnalysisResult = {
         profit_per_transaction: inverted ? globalProfit.map(profit => -1 * profit) : globalProfit,
