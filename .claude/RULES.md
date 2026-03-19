@@ -1,0 +1,21 @@
+# Coding guidelines
+
+- No semicolons at the end of lines
+- Descriptive variable names in methods or functions. Use array instead of arr, error instead of err, accumulator instead of acc, etc
+- Always arrow functions when writing anonymous functions
+- Never arrow functions when creating named functions (use function keyword instead)
+- Prefer satisfies instead of as
+- Functions and methods parameters should always be typed with the most adequate type available. Only exception -> anonymous arrow functions with only one parameter of obvious type (often as callbacks) can have this parameter untyped AND without parentheses.
+    - (array: string[], accumulator: string): string -> good
+    - (arr, acc) -> bad
+    - (array: string[]): string[] -> good
+    - array => {/* function body */} -> good ONLY if the type is obvious and the callback is small (no big operation in the callback)
+- Try/catch should have in catch block an error param typed with unknown. This can be a more descriptive error (serializationError, httpError, you name it) but never err. The catch block should never be empty. At least a console.error().
+- console.log should only be temporarily used for debugging while developing. For persistent logging that needs to be committed, usage of console.info, console.error, console.warn, console.debug and others is mandatory.
+- In html (or equivalent), prefer usage of semantic tags such as main, aside, section, etc rather than plain divs and spans. The latters aren't forbidden, but should be questioned against a semantic alternative for a given context.
+- No trailing commas in JSON & JS objects, and others
+- In arrays, prefer the .at() syntax rather than brackets []
+    - arrray.at(5) is better than array[5].
+- No space between a keyword and its opening parenthesis
+    - `for(`, `if(`, `while(`, `switch(` → good
+    - `for (`, `if (`, `while (`, `switch (` → bad
