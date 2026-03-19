@@ -95,6 +95,8 @@
     "exclude": [
         "node_modules",
         "test",
-        "scripts"
+        "scripts",
+        "server.ts",
+        "web"
     ]
 }

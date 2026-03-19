@@ -61,6 +61,15 @@ describe("GET /api/files", () => {
     })
 })
 
+describe("GET /api/price", () => {
+    it("returns 400 when pair query param is missing", async () => {
+        const response = await handler(makeRequest("/api/price"))
+        expect(response.status).toBe(400)
+        const body = await response.json() as { error: string }
+        expect(body.error).toBeTruthy()
+    })
+})
+
 describe("POST /api/analyze", () => {
     it("returns analysis result for a valid ndjson file", async () => {
         const response = await handler(makeRequest("/api/analyze", {
