@@ -17,7 +17,7 @@ async function promptPairAndInterval(): Promise<{ pair: string, interval: string
     const pair = await clack.text({
         message: 'Cryptocurrency pair',
         placeholder: 'BTCUSDT',
-        validate: value => value.trim() === '' ? 'Pair is required' : undefined
+        validate: value => !value?.trim() ? 'Pair is required' : undefined
     })
     if(clack.isCancel(pair)) return undefined
 
