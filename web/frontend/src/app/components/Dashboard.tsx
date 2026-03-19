@@ -188,7 +188,7 @@ function SessionSection({ intervals }: { intervals: string[] }) {
         try {
             const status = await fetchSessionStatus()
             setSession(status)
-        } catch { /* server may not be running */ }
+        } catch(fetchError: unknown) { console.warn('Session status unavailable:', fetchError) }
     }, [])
 
     useEffect(() => {
@@ -327,7 +327,7 @@ export default function Dashboard() {
     const [intervals, setIntervals] = useState<string[]>([])
 
     useEffect(() => {
-        fetchIntervals().then(setIntervals).catch(() => {})
+        fetchIntervals().then(setIntervals).catch((fetchError: unknown) => console.warn('Could not fetch intervals:', fetchError))
     }, [])
 
     return (
