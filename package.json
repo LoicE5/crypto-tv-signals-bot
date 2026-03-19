@@ -1,6 +1,6 @@
 {
   "name": "crypto-tv-signals-bot",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "scripts": {
     "build": "bun run scripts/build.ts",
     "build:linux-x64": "bun run scripts/build.ts linux-x64 && bun postbuild",
@@ -16,6 +16,7 @@
     "install:chrome": "bunx puppeteer browsers install chrome"
   },
   "dependencies": {
+    "@clack/prompts": "^1.1.0",
     "ccxt": "^4.4.80",
     "protobufjs": "^8.0.0",
     "puppeteer": "^24.6.1"
