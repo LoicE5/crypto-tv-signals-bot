@@ -30,6 +30,7 @@
     "typescript": "^5.8.2"
   },
   "overrides": {
-    "yauzl": "^3.2.1"
+    "yauzl": "^3.2.1",
+    "flatted": "^3.4.2"
   }
 }
