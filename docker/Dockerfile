@@ -12,7 +12,7 @@ RUN apk add --no-cache \
 
 # Use Alpine's system Chromium — skip Puppeteer's bundled download
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
 
