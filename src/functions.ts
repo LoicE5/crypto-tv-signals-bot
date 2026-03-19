@@ -178,7 +178,7 @@ export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boole
     const profitVariation = (profitSum / absoluteFirstPrice) * 100
 
     const result: AnalysisResult = {
-        profit_per_transaction: inverted ? globalProfit.map(p => -1 * p) : globalProfit,
+        profit_per_transaction: inverted ? globalProfit.map(profit => -1 * profit) : globalProfit,
         sum: inverted ? -1 * profitSum : profitSum,
         var: (inverted ? -1 * profitVariation : profitVariation) + '%'
     }
