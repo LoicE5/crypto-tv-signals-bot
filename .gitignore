@@ -5,3 +5,5 @@ output/
 dist/
 .*-*.bun-build
 PROMPT.md
+docker/volumes/output/*
+!docker/volumes/output/.gitkeep

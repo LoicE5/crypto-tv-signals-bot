@@ -1,0 +1,13 @@
+name: crypto-tv-signals-bot
+
+services:
+  bot:
+    image: loice5/crypto-tv-signals-bot:1.1.0
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      # Required for Chromium inside Docker (no user-namespace sandbox available)
+      - PUPPETEER_NO_SANDBOX=true
+    volumes:
+      - ./volumes/output:/app/output
