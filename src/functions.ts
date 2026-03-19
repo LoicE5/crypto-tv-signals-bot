@@ -173,8 +173,9 @@ export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boole
         return undefined
     }
 
-    const profitSum = globalProfit.reduce((accumulator, currentValue) => accumulator + currentValue)
-    const profitVariation = (profitSum / absoluteFirstPrice!) * 100
+    const profitSum = globalProfit.reduce((accumulator: number, currentValue: number): number => accumulator + currentValue)
+    if(absoluteFirstPrice === undefined) return undefined
+    const profitVariation = (profitSum / absoluteFirstPrice) * 100
 
     const result: AnalysisResult = {
         profit_per_transaction: inverted ? globalProfit.map(p => -1 * p) : globalProfit,
@@ -192,7 +193,8 @@ export async function isPairValid(pair: string): Promise<boolean> {
     try {
         await getLastPrice(pair)
         return true
-    } catch {
+    } catch(pairError: unknown) {
+        console.error('Pair validation failed:', pairError)
         return false
     }
 }
