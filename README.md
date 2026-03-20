@@ -151,7 +151,7 @@ Run with Docker Compose (pass a command after `--`):
 ```bash
 bun run docker:up
 # Override the default command:
-docker compose -f docker/docker-compose.yaml run --rm bot analyze --path=/app/output/BTCUSDT_1m_19-3-2026.ndjson
+docker compose -f docker/docker-compose.yaml run --rm bot bun simulate --pair=BTCUSDT
 ```
 
 Output `.ndjson` files are persisted to `docker/volumes/output/` on the host.
