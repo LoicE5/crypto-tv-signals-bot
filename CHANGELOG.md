@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.1 - 2026-03-19
+
+### Added
+- `docker/Dockerfile`: minimal Bun Alpine image with system Chromium for Puppeteer; copies only runtime files
+- `docker/docker-compose.yaml`: Compose service using the Docker image; maps `docker/volumes/output` to `/app/output`
+- `docker/volumes/output/.gitkeep`: placeholder so the volume directory is tracked in git
+- `docker:build` script: builds the Docker image tagged `loice5/crypto-tv-signals-bot:1.1.0`
+- `docker:up` script: starts the Compose stack (non-detached)
+- `.github/workflows/docker-publish.yaml`: CI workflow to build and push multi-arch image (`amd64`/`arm64`) to Docker Hub on version tags or manual dispatch
+- `PUPPETEER_NO_SANDBOX` env var support in `index.ts`: passes `--no-sandbox` to Chromium when set to `true` (required in Docker)
+
 ## 1.1.0 — 2026-03-19
 
 ### Fixed

@@ -138,6 +138,28 @@ bun run build:macos-arm64 # macOS arm64 → dist/crypto-tv-signals-bot-macos-arm
 
 ---
 
+## Docker
+
+Build the image:
+
+```bash
+bun run docker:build
+```
+
+Run with Docker Compose (pass a command after `--`):
+
+```bash
+bun run docker:up
+# Override the default command:
+docker compose -f docker/docker-compose.yaml run --rm bot bun simulate --pair=BTCUSDT
+```
+
+Output `.ndjson` files are persisted to `docker/volumes/output/` on the host.
+
+The `PUPPETEER_NO_SANDBOX=true` environment variable is set in the Compose service by default, enabling Chromium to run inside Docker without a user-namespace sandbox.
+
+---
+
 ## Contribute
 
 Clone the repo and open a pull request. Any contribution is appreciated.

@@ -38,7 +38,10 @@ if(firstArgv === 'analyze') {
     process.exit(0)
 }
 
-const browser: Browser = await puppeteer.launch()
+const noSandbox = process.env.PUPPETEER_NO_SANDBOX === 'true'
+const browser: Browser = await puppeteer.launch({
+    args: noSandbox ? ['--no-sandbox', '--disable-setuid-sandbox'] : []
+})
 
 process.on('SIGINT', async () => {
     await browser.close()
