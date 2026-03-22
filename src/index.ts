@@ -23,14 +23,21 @@ if(!validCommands.includes(firstArgv)) {
 if(firstArgv === 'analyze') {
     const path = getValueFromArgv("--path", process.argv)
     const inverted = isArgv("--inverted", process.argv)
+    const amountStr = getValueFromArgv("--amount", process.argv)
+    const amount = amountStr !== null ? Number(amountStr) : undefined
 
     if(!path) {
         console.error("--path is required for the analyze command")
         process.exit(1)
     }
 
+    if(amount !== undefined && (isNaN(amount) || amount <= 0)) {
+        console.error("--amount must be a positive number")
+        process.exit(1)
+    }
+
     try {
-        console.info(await analyseJsonTable(path, inverted))
+        console.info(await analyseJsonTable(path, inverted, undefined, amount))
     } catch(error: unknown) {
         console.error(`Failed to analyze file at "${path}": ${error}`)
         process.exit(1)
@@ -39,7 +46,10 @@ if(firstArgv === 'analyze') {
     process.exit(0)
 }
 
-const browser: Browser = await puppeteer.launch()
+const noSandbox = process.env.PUPPETEER_NO_SANDBOX === 'true'
+const browser: Browser = await puppeteer.launch({
+    args: noSandbox ? ['--no-sandbox', '--disable-setuid-sandbox'] : []
+})
 
 process.on('SIGINT', async () => {
     await browser.close()

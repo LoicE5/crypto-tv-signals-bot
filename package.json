@@ -11,9 +11,15 @@
     "typecheck": "tsc --noEmit",
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
+    "analyze": "bun run start analyze",
+    "simulate": "bun run start simulate",
+    "write": "bun run start write",
     "lint": "eslint src/**/*.ts",
     "test": "bun test",
-    "install:chrome": "bunx puppeteer browsers install chrome"
+    "install:chrome": "bunx puppeteer browsers install chrome",
+    "docker:build": "docker build -f docker/Dockerfile -t loice5/crypto-tv-signals-bot:1.1.0 .",
+    "docker:up": "docker compose -f docker/docker-compose.yaml run --rm bot",
+    "compose": "bun run docker:up"
   },
   "dependencies": {
     "@clack/prompts": "^1.1.0",
