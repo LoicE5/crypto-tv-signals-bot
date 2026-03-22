@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  distDir: "../dist/frontend",
+  distDir: "dist",
 };
 
 export default nextConfig;
