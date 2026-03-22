@@ -4,6 +4,14 @@
 
 This tool uses Puppeteer to scrape [TradingView's Technical Analysis Widget](https://www.tradingview.com/widget/technical-analysis/) and report signals for cryptocurrency pairs.
 
+Run without arguments for an interactive CLI with arrow navigation:
+
+```bash
+bun start
+```
+
+Or pass a command directly:
+
 Three commands are available:
 
 - **simulate** — Print the current price and TradingView signal for a pair at regular intervals

@@ -2,12 +2,19 @@ import { validIntervals } from './constants'
 import { getLastPrice, getIndicator, logJsonTable, analyseJsonTable, isPairValid } from './functions'
 import { getValueFromArgv, isArgv } from './tools'
 import puppeteer, { Browser } from "puppeteer"
+import { runCli } from './cli'
 
-const validCommands = ['analyze', 'simulate', 'write', 'log']
 const firstArgv = process.argv.at(2)
 
-if(!firstArgv || !validCommands.includes(firstArgv)) {
-    console.error(`Invalid or missing command. Expected one of: ${validCommands.filter(command => command !== 'log').join(', ')}`)
+// No arguments — launch interactive CLI
+if(!firstArgv) {
+    await runCli()
+} else {
+
+const validCommands = ['analyze', 'simulate', 'write', 'log']
+
+if(!validCommands.includes(firstArgv)) {
+    console.error(`Invalid command "${firstArgv}". Expected one of: ${validCommands.filter(command => command !== 'log').join(', ')}`)
     process.exit(1)
 }
 
@@ -104,3 +111,5 @@ if(firstArgv === 'write' || firstArgv === 'log') {
 
     await logJsonTable(browser, pair, interval, delay)
 }
+
+} // end else (CLI argument mode)

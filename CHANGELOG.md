@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0 — 2026-03-19
+
+### Added
+- Interactive CLI via `@clack/prompts`: launched when the program is run with no arguments
+- Arrow-navigable menus to choose command (simulate / write / analyze), pair, interval, delay, and .ndjson file
+- Recursive `.ndjson` file discovery (`Bun.Glob`) for the analyze command, excluding `node_modules`
+- `src/cli.ts`: all prompt logic and `discoverNdjsonFiles` utility (exported for testing)
+- 6 new unit tests in `test/cli.test.ts` covering `discoverNdjsonFiles` behaviour
+
+### Changed
+- `src/index.ts`: when run without arguments the interactive CLI starts; with arguments the behavior is unchanged
+
 ## 1.1.1 - 2026-03-19
 
 ### Added

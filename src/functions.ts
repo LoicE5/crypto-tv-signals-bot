@@ -187,6 +187,7 @@ export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boole
     }
 
     const profitSum = globalProfit.reduce((accumulator: number, currentValue: number): number => accumulator + currentValue)
+    
     if (absoluteFirstPrice === undefined)
         return undefined
     
