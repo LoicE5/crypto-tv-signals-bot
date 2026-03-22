@@ -5,6 +5,7 @@ import { writeFile, appendFile, readOutputFile } from './tools'
 import { TickerRow, AnalysisResult, SignalValue } from './interfaces'
 import { mkdir } from "node:fs/promises"
 import { validIntervals, EXCHANGE_FEES } from "./constants"
+import { writeLogger } from "./logger"
 
 /**
  * Returns a signal indicator from TradingView's Technical Analysis Widget
@@ -96,7 +97,7 @@ export async function logJsonTable(browser: Browser, pair: string, interval: str
                 signal: await getIndicator(browser, pair, interval)
             }
 
-            console.info(row)
+            writeLogger(row)
             await appendFile(fileName, JSON.stringify(row) + "\n")
 
         } catch(error: unknown) {

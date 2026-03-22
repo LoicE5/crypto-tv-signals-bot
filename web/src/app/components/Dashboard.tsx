@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import styles from './Dashboard.module.css'
 import {
     fetchFiles,
@@ -10,9 +11,12 @@ import {
     fetchSessionStatus,
     startSession,
     stopSession,
+    LOGS_STREAM_URL,
     type AnalysisResult,
     type Session
 } from '@/lib/api'
+
+const XTerminal = dynamic(() => import('./XTerminal'), { ssr: false })
 
 // ── Analyze section ────────────────────────────────────────────────────────────
 
@@ -321,6 +325,19 @@ function SessionSection({ intervals }: { intervals: string[] }) {
     )
 }
 
+// ── Live logs section ──────────────────────────────────────────────────────────
+
+function LogSection() {
+    return (
+        <section className={styles.card} aria-labelledby="log-heading">
+            <h2 id="log-heading">Live Logs</h2>
+            <div className={styles.terminalWrap}>
+                <XTerminal streamUrl={LOGS_STREAM_URL} />
+            </div>
+        </section>
+    )
+}
+
 // ── Dashboard root ─────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
@@ -337,9 +354,10 @@ export default function Dashboard() {
                 <span className={styles.badge}>alpha</span>
             </header>
 
+            <SessionSection intervals={intervals} />
+            <LogSection />
             <AnalyzeSection />
             <PriceSection />
-            <SessionSection intervals={intervals} />
         </main>
     )
 }

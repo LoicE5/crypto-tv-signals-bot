@@ -1,5 +1,6 @@
 import { analyseJsonTable, getLastPrice, getIndicator, logJsonTable, isPairValid } from './functions'
 import { validIntervals } from './constants'
+import { simulateLogger, addSSEClient, removeSSEClient } from './logger'
 import type { Browser } from 'puppeteer'
 import { version } from '../package.json'
 
@@ -125,7 +126,7 @@ export async function handler(request: Request): Promise<Response> {
                 sessionIntervalId = setInterval(async () => {
                     const price = await getLastPrice(pair)
                     const signal = await getIndicator(sessionBrowser as Browser, pair, interval)
-                    console.info(`[simulate] ${pair} | ${interval} | ${price} | ${signal}`)
+                    simulateLogger(`[simulate] ${pair} | ${interval} | ${price} | ${signal}`)
                 }, 1000)
             } else {
                 sessionIntervalId = await logJsonTable(sessionBrowser, pair, interval, delay)
@@ -142,6 +143,30 @@ export async function handler(request: Request): Promise<Response> {
         if(!activeSession) return json({ error: 'No active session' }, 404)
         await stopSession()
         return json({ stopped: true })
+    }
+
+    if(pathname === '/api/logs/stream' && request.method === 'GET') {
+        let controller!: ReadableStreamDefaultController<Uint8Array>
+        const stream = new ReadableStream<Uint8Array>({
+            start(ctrl) {
+                controller = ctrl
+                addSSEClient(ctrl)
+                request.signal.addEventListener('abort', () => removeSSEClient(ctrl))
+            },
+            cancel() {
+                removeSSEClient(controller)
+            }
+        })
+        return new Response(stream, {
+            status: 200,
+            headers: {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no',
+                ...CORS_HEADERS
+            }
+        })
     }
 
     return json({ error: 'Not found' }, 404)

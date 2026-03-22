@@ -1,5 +1,7 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
+export const LOGS_STREAM_URL = `${API_BASE}/api/logs/stream`
+
 export interface AnalysisResult {
     profit_per_transaction: number[]
     sum: number

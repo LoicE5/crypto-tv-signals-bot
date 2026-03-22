@@ -196,6 +196,13 @@
     margin-top: 0.5rem;
 }
 
+/* Terminal log viewer */
+.terminalWrap {
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
 .dot {
     width: 7px;
     height: 7px;
