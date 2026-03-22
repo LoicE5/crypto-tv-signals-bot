@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0 — 2026-03-19
+## 1.3.0 — 2026-03-19
 
 ### Added
 - `server.ts`: Bun-native HTTP API server (`Bun.serve`) on port 3001 with endpoints:
@@ -21,6 +21,42 @@
 - `web/frontend/src/__tests__/api.test.ts`: 12 unit tests for API utility functions (fetch mocked)
 - `bruno/`: Bruno API test collection with 8 request files and local environment
 - `server`, `server:dev`, `frontend:dev`, `test:all`, `bruno` scripts in package.json
+
+## 1.2.0 — 2026-03-19
+
+### Added
+- Interactive CLI via `@clack/prompts`: launched when the program is run with no arguments
+- Arrow-navigable menus to choose command (simulate / write / analyze), pair, interval, delay, and .ndjson file
+- Recursive `.ndjson` file discovery (`Bun.Glob`) for the analyze command, excluding `node_modules`
+- `src/cli.ts`: all prompt logic and `discoverNdjsonFiles` utility (exported for testing)
+- 6 new unit tests in `test/cli.test.ts` covering `discoverNdjsonFiles` behaviour
+
+### Changed
+- `src/index.ts`: when run without arguments the interactive CLI starts; with arguments the behavior is unchanged
+
+## 1.1.1 - 2026-03-19
+
+### Added
+- `docker/Dockerfile`: minimal Bun Alpine image with system Chromium for Puppeteer; copies only runtime files
+- `docker/docker-compose.yaml`: Compose service using the Docker image; maps `docker/volumes/output` to `/app/output`
+- `docker/volumes/output/.gitkeep`: placeholder so the volume directory is tracked in git
+- `docker:build` script: builds the Docker image tagged `loice5/crypto-tv-signals-bot:1.1.0`
+- `docker:up` script: starts the Compose stack (non-detached)
+- `.github/workflows/docker-publish.yaml`: CI workflow to build and push multi-arch image (`amd64`/`arm64`) to Docker Hub on version tags or manual dispatch
+- `PUPPETEER_NO_SANDBOX` env var support in `index.ts`: passes `--no-sandbox` to Chromium when set to `true` (required in Docker)
+
+## 1.1.0 — 2026-03-19
+
+### Fixed
+- `analyseJsonTable`: open positions at end of file are now closed at the last available price instead of being silently dropped (was a HIGH-severity bug that understated returns)
+- `analyseJsonTable`: `absoluteFirstPrice` division is now guarded against `undefined`/`0` to prevent `NaN` in the `var` field
+- `analyseJsonTable`: `currentSignal` is tracked across the loop so the correct position type is used for the EOF close
+
+### Added
+- `EXCHANGE_FEES` constant in `src/constants.ts`: maps exchange ids (`binance`, `bybit`, `okx`, `kraken`, `coinbase`, `kucoin`, `bitfinex`) to their typical spot taker fee rate
+- `analyseJsonTable` now accepts an optional `feeRate` parameter (default: fee for the globally configured exchange — Binance 0.1%) and deducts round-trip fees from each trade's profit
+- Internal `calculateSignalProfit` helper to unify profit and fee logic across both in-loop and EOF close paths
+- New unit tests: EOF position close, fee deduction, two-row insufficient-data edge case
 
 ## 1.0.0 — 2026-03-14
 

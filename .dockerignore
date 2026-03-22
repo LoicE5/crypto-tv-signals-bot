@@ -1,0 +1,14 @@
+node_modules
+output/
+dist/
+build/
+.git
+.github
+docker/volumes
+web/
+test/
+bruno/
+*.md
+*.log
+.DS_Store
+.*-*.bun-build

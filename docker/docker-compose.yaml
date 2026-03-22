@@ -1,0 +1,17 @@
+name: crypto-tv-signals-bot
+
+services:
+  bot:
+    image: loice5/crypto-tv-signals-bot:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    entrypoint: ""
+    command: sh
+    stdin_open: true
+    tty: true
+    environment:
+      # Required for Chromium inside Docker (no user-namespace sandbox available)
+      - PUPPETEER_NO_SANDBOX=true
+    volumes:
+      - ./volumes/output:/app/output

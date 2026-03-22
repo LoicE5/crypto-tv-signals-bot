@@ -1,6 +1,6 @@
 {
   "name": "crypto-tv-signals-bot",
-  "version": "1.1.0",
+  "version": "1.3.0",
   "scripts": {
     "build": "bun run scripts/build.ts",
     "build:linux-x64": "bun run scripts/build.ts linux-x64 && bun postbuild",
@@ -11,6 +11,9 @@
     "typecheck": "tsc --noEmit",
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
+    "analyze": "bun run start analyze",
+    "simulate": "bun run start simulate",
+    "write": "bun run start write",
     "lint": "eslint src/**/*.ts",
     "test": "bun test",
     "install:chrome": "bunx puppeteer browsers install chrome",
@@ -18,9 +21,13 @@
     "server:dev": "bun --watch server.ts",
     "frontend:dev": "cd web/frontend && bun run dev",
     "test:all": "bun test test/ && cd web/frontend && bun test",
-    "bruno": "cd bruno && bru run api --env local"
+    "bruno": "cd bruno && bru run api --env local",
+    "docker:build": "docker build -f docker/Dockerfile -t loice5/crypto-tv-signals-bot:1.1.0 .",
+    "docker:up": "docker compose -f docker/docker-compose.yaml run --rm bot",
+    "compose": "bun run docker:up"
   },
   "dependencies": {
+    "@clack/prompts": "^1.1.0",
     "ccxt": "^4.4.80",
     "protobufjs": "^8.0.0",
     "puppeteer": "^24.6.1"
