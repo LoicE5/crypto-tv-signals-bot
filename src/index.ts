@@ -9,8 +9,7 @@ const firstArgv = process.argv.at(2)
 // No arguments — launch interactive CLI
 if(!firstArgv) {
     await runCli()
-    process.exit(0)
-}
+} else {
 
 const validCommands = ['analyze', 'simulate', 'write', 'log']
 
@@ -112,3 +111,5 @@ if(firstArgv === 'write' || firstArgv === 'log') {
 
     await logJsonTable(browser, pair, interval, delay)
 }
+
+} // end else (CLI argument mode)
