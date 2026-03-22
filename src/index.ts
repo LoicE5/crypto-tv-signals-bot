@@ -1,6 +1,7 @@
 import { validCommands, validIntervals } from './constants'
 import { getLastPrice, getIndicator, logJsonTable, analyseJsonTable, isPairValid } from './functions'
 import { getValueFromArgv, isArgv } from './tools'
+import { simulateLogger } from './logger'
 import puppeteer, { Browser } from "puppeteer"
 import { runCli } from './cli'
 
@@ -77,7 +78,7 @@ if(!firstArgv) {
 
         setInterval(async () => {
             try {
-                console.info(`Pair : ${pair} | Interval : ${interval} | Price : ${await getLastPrice(pair)} | Signal : ${await getIndicator(browser, pair, interval)}`)
+                simulateLogger(`Pair : ${pair} | Interval : ${interval} | Price : ${await getLastPrice(pair)} | Signal : ${await getIndicator(browser, pair, interval)}`)
             } catch(simulateError: unknown) {
                 console.error('Simulate tick failed:', simulateError)
             }
