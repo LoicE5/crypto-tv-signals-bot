@@ -10,3 +10,5 @@ export const EXCHANGE_FEES: Record<string, number> = {
     kucoin: 0.001,
     bitfinex: 0.002
 }
+
+export const validCommands = new Set(['analyze', 'simulate', 'write', 'log'])
