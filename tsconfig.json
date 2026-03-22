@@ -96,7 +96,7 @@
         "node_modules",
         "test",
         "scripts",
-        "server.ts",
+        "src/server.ts",
         "web"
     ]
 }

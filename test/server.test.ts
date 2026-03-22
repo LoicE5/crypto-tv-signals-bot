@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "bun:test"
 import fs from "fs"
 import path from "path"
-import { handler } from "../server"
+import { handler } from "../src/server"
 
 const TEST_DIR = "/tmp/crypto-tv-signals-bot-server-tests"
 const TEST_NDJSON = path.join(TEST_DIR, "test.ndjson")

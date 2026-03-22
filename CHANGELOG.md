@@ -3,7 +3,7 @@
 ## 1.3.0 — 2026-03-19
 
 ### Added
-- `server.ts`: Bun-native HTTP API server (`Bun.serve`) on port 3001 with endpoints:
+- `src/server.ts`: Bun-native HTTP API server (`Bun.serve`) on port 3001 with endpoints:
   - `GET /api/health` — health check
   - `GET /api/intervals` — list valid TradingView intervals
   - `GET /api/files` — list .ndjson files in cwd (recursive, excludes node_modules)
@@ -13,14 +13,9 @@
   - `POST /api/session/start` — start a simulate or write session (requires Chromium)
   - `POST /api/session/stop` — stop the active session
   - CORS headers on all responses; `import.meta.main` guard so handler is importable in tests
-- `web/frontend/`: Next.js 16 frontend (`src/app` router, TypeScript, CSS modules, no Tailwind)
-  - Three UI sections: Analyze, Price Check, Session Control
-  - `src/lib/api.ts`: typed fetch utilities for all server endpoints
-  - Dark/light mode via CSS custom properties
-- `test/server.test.ts`: 14 unit tests for the server handler (no running server required)
-- `web/frontend/src/__tests__/api.test.ts`: 12 unit tests for API utility functions (fetch mocked)
+- `test/server.test.ts`: 15 unit tests for the server handler (no running server required)
 - `bruno/`: Bruno API test collection with 8 request files and local environment
-- `server`, `server:dev`, `frontend:dev`, `test:all`, `bruno` scripts in package.json
+- `server`, `server:dev`, `test:all`, `bruno` scripts in package.json
 
 ## 1.2.0 — 2026-03-19
 

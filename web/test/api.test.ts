@@ -1,5 +1,5 @@
 import { describe, it, expect, mock, beforeEach } from "bun:test"
-import { fetchIntervals, fetchFiles, fetchPrice, analyzeFile, fetchSessionStatus } from "../lib/api"
+import { fetchIntervals, fetchFiles, fetchPrice, analyzeFile, fetchSessionStatus } from "../src/lib/api"
 
 // Mock global fetch
 const mockFetch = mock(async (_url: string | URL | Request, _init?: RequestInit): Promise<Response> => {

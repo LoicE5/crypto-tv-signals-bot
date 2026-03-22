@@ -1,7 +1,7 @@
-import { analyseJsonTable, getLastPrice, getIndicator, logJsonTable, isPairValid } from './src/functions'
-import { validIntervals } from './src/constants'
+import { analyseJsonTable, getLastPrice, getIndicator, logJsonTable, isPairValid } from './functions'
+import { validIntervals } from './constants'
 import type { Browser } from 'puppeteer'
-import { version } from './package.json'
+import { version } from '../package.json'
 
 const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
