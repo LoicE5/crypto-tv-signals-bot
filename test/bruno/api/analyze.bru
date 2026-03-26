@@ -7,6 +7,7 @@ meta {
 post {
   url: {{baseUrl}}/api/analyze
   body: json
+  auth: none
 }
 
 body:json {
@@ -16,11 +17,15 @@ body:json {
   }
 }
 
+vars:pre-request {
+  testNdjsonPath: test/bruno/fixtures/test.ndjson
+}
+
 tests {
   test("returns 200", function() {
     expect(res.status).to.equal(200)
   })
-
+  
   test("result has expected shape or is null", function() {
     const result = res.body.result
     if(result != null) {
