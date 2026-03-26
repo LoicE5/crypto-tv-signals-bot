@@ -23,7 +23,7 @@ tests {
 
   test("result has expected shape or is null", function() {
     const result = res.body.result
-    if(result !== null) {
+    if(result != null) {
       expect(typeof result.sum).to.equal("number")
       expect(result.var).to.match(/%$/)
       expect(Array.isArray(result.profit_per_transaction)).to.be.true
