@@ -146,6 +146,36 @@ bun run build:macos-arm64 # macOS arm64 → dist/crypto-tv-signals-bot-macos-arm
 
 ---
 
+## Web UI
+
+Start the API server (port 3001):
+
+```bash
+bun run server
+```
+
+Start the Next.js frontend (port 3000, separate terminal):
+
+```bash
+bun run frontend:dev
+```
+
+Open `http://localhost:3000` to use the web interface. The UI mirrors the CLI: analyze .ndjson files, check prices, and control simulate/write sessions.
+
+<details>
+<summary><b>Screenshot</b></summary>
+
+![Web UI screenshot](images/web_screenshot.jpeg)
+
+</details>
+
+### Bruno API tests
+
+Requires a running server (`bun run server`):
+
+```bash
+bun run bruno
+```
 ## Docker
 
 Build the image:

@@ -2,6 +2,7 @@ import * as clack from '@clack/prompts'
 import puppeteer from 'puppeteer'
 import { validIntervals } from './constants'
 import { analyseJsonTable, getIndicator, getLastPrice, isPairValid, logJsonTable } from './functions'
+import { simulateLogger } from './logger'
 
 export async function discoverNdjsonFiles(): Promise<string[]> {
     const glob = new Bun.Glob('**/*.ndjson')
@@ -134,6 +135,6 @@ export async function runCli(): Promise<void> {
     setInterval(async () => {
         const price = await getLastPrice(pair)
         const signal = await getIndicator(browser, pair, interval)
-        console.info(`Pair: ${pair} | Interval: ${interval} | Price: ${price} | Signal: ${signal}`)
+        simulateLogger(`Pair: ${pair} | Interval: ${interval} | Price: ${price} | Signal: ${signal}`)
     }, 1000)
 }

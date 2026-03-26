@@ -1,0 +1,25 @@
+meta {
+  name: Get Intervals
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/intervals
+}
+
+tests {
+  test("returns 200", function() {
+    expect(res.status).to.equal(200)
+  })
+
+  test("intervals is an array", function() {
+    expect(Array.isArray(res.body.intervals)).to.be.true
+  })
+
+  test("contains expected intervals", function() {
+    expect(res.body.intervals).to.include("1m")
+    expect(res.body.intervals).to.include("1h")
+    expect(res.body.intervals).to.include("1D")
+  })
+}

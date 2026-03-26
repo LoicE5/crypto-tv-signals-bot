@@ -1,0 +1,19 @@
+meta {
+  name: List NDJSON Files
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/files
+}
+
+tests {
+  test("returns 200", function() {
+    expect(res.status).to.equal(200)
+  })
+
+  test("files is an array", function() {
+    expect(Array.isArray(res.body.files)).to.be.true
+  })
+}

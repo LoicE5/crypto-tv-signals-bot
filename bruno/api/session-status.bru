@@ -1,0 +1,20 @@
+meta {
+  name: Session Status
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/session/status
+}
+
+tests {
+  test("returns 200", function() {
+    expect(res.status).to.equal(200)
+  })
+
+  test("session is null or an object", function() {
+    const session = res.body.session
+    expect(session === null || typeof session === "object").to.be.true
+  })
+}

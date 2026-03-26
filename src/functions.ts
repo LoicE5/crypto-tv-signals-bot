@@ -5,6 +5,7 @@ import { writeFile, appendFile, readOutputFile } from './tools'
 import { TickerRow, AnalysisResult, SignalValue } from './interfaces'
 import { mkdir } from "node:fs/promises"
 import { validIntervals, EXCHANGE_FEES } from "./constants"
+import { writeLogger } from "./logger"
 
 /**
  * Returns a signal indicator from TradingView's Technical Analysis Widget
@@ -77,7 +78,7 @@ export async function getLastPrice(pair: string, exchange: Exchange = defaultExc
  * @param delay Seconds between each fetch and write (default: 10)
  * @param exchange CCXT exchange instance to use (default: Binance)
  */
-export async function logJsonTable(browser: Browser, pair: string, interval: string, delay: number = 10, exchange: Exchange = defaultExchange): Promise<void> {
+export async function logJsonTable(browser: Browser, pair: string, interval: string, delay: number = 10, exchange: Exchange = defaultExchange): Promise<ReturnType<typeof setInterval>> {
 
     await mkdir('./output', { recursive: true })
 
@@ -86,7 +87,7 @@ export async function logJsonTable(browser: Browser, pair: string, interval: str
 
     await writeFile(fileName, '', true)
 
-    setInterval(async () => {
+    return setInterval(async () => {
         try {
             const row: TickerRow = {
                 pair: pair,
@@ -96,7 +97,7 @@ export async function logJsonTable(browser: Browser, pair: string, interval: str
                 signal: await getIndicator(browser, pair, interval)
             }
 
-            console.info(row)
+            writeLogger(row)
             await appendFile(fileName, JSON.stringify(row) + "\n")
 
         } catch(error: unknown) {
