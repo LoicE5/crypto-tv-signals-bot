@@ -25,7 +25,7 @@
     "server": "bun src/server.ts",
     "server:dev": "bun --watch src/server.ts",
     "test:all": "bun test test/",
-    "bruno": "cd bruno && bru run api --env local",
+    "bruno": "cd test/bruno && bru run api --env local",
     "docker:build": "docker build -f docker/Dockerfile -t loice5/crypto-tv-signals-bot:latest .",
     "docker:up": "docker compose -f docker/docker-compose.yaml run --rm bot",
     "compose": "bun run docker:up",
