@@ -35,7 +35,7 @@ function AnalyzeSection() {
                 setFiles(found)
                 if(found.length > 0) setSelectedFile(found.at(0)!)
             })
-            .catch((fetchError: unknown) => { console.error('Could not load file list:', fetchError); setError('Could not load file list') })
+            .catch((fetchError: unknown) => { console.warn('Could not load file list:', fetchError instanceof Error ? fetchError.message : fetchError); setError('Could not load file list') })
     }, [])
 
     async function handleAnalyze() {
@@ -193,7 +193,7 @@ function SessionSection({ intervals }: { intervals: string[] }) {
         try {
             const status = await fetchSessionStatus()
             setSession(status)
-        } catch(fetchError: unknown) { console.warn('Session status unavailable:', fetchError) }
+        } catch(fetchError: unknown) { console.warn('Session status unavailable:', fetchError instanceof Error ? fetchError.message : fetchError) }
     }, [])
 
     useEffect(() => {
@@ -349,7 +349,7 @@ export default function Dashboard() {
             if (!ok)
                 alert(`Server is not available at the moment. URL ${url} returned an error code ${status}`)
         })
-        fetchIntervals().then(setIntervals).catch(fetchError => console.warn('Could not fetch intervals:', fetchError))
+        fetchIntervals().then(setIntervals).catch(fetchError => console.warn('Could not fetch intervals:', fetchError instanceof Error ? fetchError.message : fetchError))
     }, [])
 
     return (
