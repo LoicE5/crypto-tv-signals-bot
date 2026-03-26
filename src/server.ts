@@ -119,7 +119,10 @@ export async function handler(request: Request): Promise<Response> {
 
         try {
             const puppeteer = await import('puppeteer')
-            sessionBrowser = await puppeteer.default.launch()
+            const noSandbox = process.env.PUPPETEER_NO_SANDBOX === 'true'
+            sessionBrowser = await puppeteer.default.launch({
+                args: noSandbox ? ['--no-sandbox', '--disable-setuid-sandbox'] : []
+            })
             activeSession = { command, pair, interval, delay, startedAt: Date.now() }
 
             if(command === 'simulate') {

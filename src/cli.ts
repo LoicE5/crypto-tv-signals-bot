@@ -107,6 +107,10 @@ export async function runCli(): Promise<void> {
     }
     spinner.stop('Pair validated')
 
+    const browserArgs = process.env.PUPPETEER_NO_SANDBOX === 'true'
+        ? ['--no-sandbox', '--disable-setuid-sandbox']
+        : []
+
     if(command === 'write') {
         const delayInput = await clack.text({
             message: 'Delay between records (seconds)',
@@ -120,7 +124,7 @@ export async function runCli(): Promise<void> {
         if(clack.isCancel(delayInput)) { clack.cancel('Cancelled.'); return }
 
         const delay = Number(delayInput) || 10
-        const browser = await puppeteer.launch()
+        const browser = await puppeteer.launch({ args: browserArgs })
         process.on('SIGINT', async () => { await browser.close(); process.exit(0) })
         clack.outro(`Writing ${pair} @ ${interval} every ${delay}s — press Ctrl+C to stop.`)
         await logJsonTable(browser, pair, interval, delay)
@@ -128,7 +132,7 @@ export async function runCli(): Promise<void> {
     }
 
     // simulate
-    const browser = await puppeteer.launch()
+    const browser = await puppeteer.launch({ args: browserArgs })
     process.on('SIGINT', async () => { await browser.close(); process.exit(0) })
     clack.outro(`Simulating ${pair} @ ${interval} — press Ctrl+C to stop.`)
 
