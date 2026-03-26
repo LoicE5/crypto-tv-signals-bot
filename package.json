@@ -30,6 +30,7 @@
     "docker:up": "docker compose -f docker/docker-compose.yaml run --rm bot",
     "compose": "bun run docker:up",
     "setup:env": "cp .env.example .env",
+    "web": "bun run web:dev",
     "web:dev": "cd web && bun run dev",
     "web:build": "cd web && bun run build",
     "web:start": "cd web && bun run start"
