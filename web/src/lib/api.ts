@@ -75,13 +75,12 @@ export async function stopSession(): Promise<void> {
         throw new Error(data.error)
 }
 
-export async function checkHealth(): Promise<string | null> {
+export async function checkHealth(): Promise<{url: string, status: number, ok: boolean}> {
     const url = `${API_BASE}/api/health`
     try {
         const res = await fetch(url)
-        if (!res.ok) return url
-        return null
+        return { url, status: res.status, ok: res.ok }
     } catch {
-        return url
+        return { url, status: 0, ok: false }
     }
 }

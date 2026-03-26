@@ -345,11 +345,11 @@ export default function Dashboard() {
     const [intervals, setIntervals] = useState<string[]>([])
 
     useEffect(() => {
-        checkHealth().then(failedUrl => {
-            if (failedUrl)
-                alert(`Server is not available: ${failedUrl}`)
+        checkHealth().then(({ url, status, ok }) => {
+            if (!ok)
+                alert(`Server is not available at the moment. URL ${url} returned an error code ${status}`)
         })
-        fetchIntervals().then(setIntervals).catch((fetchError: unknown) => console.warn('Could not fetch intervals:', fetchError))
+        fetchIntervals().then(setIntervals).catch(fetchError => console.warn('Could not fetch intervals:', fetchError))
     }, [])
 
     return (
