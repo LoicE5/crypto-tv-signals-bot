@@ -16,6 +16,4 @@
 - No trailing commas in JSON & JS objects, and others
 - In arrays, prefer the .at() syntax rather than brackets []
     - arrray.at(5) is better than array[5].
-- No space between a keyword and its opening parenthesis
-    - `for(`, `if(`, `while(`, `switch(` → good
-    - `for (`, `if (`, `while (`, `switch (` → bad
+

@@ -31,7 +31,8 @@ export async function fetchFiles(): Promise<string[]> {
 export async function fetchPrice(pair: string): Promise<number | undefined> {
     const response = await fetch(`${API_BASE}/api/price?pair=${encodeURIComponent(pair)}`)
     const data = await response.json() as { price?: number, error?: string }
-    if(data.error) throw new Error(data.error)
+    if (data.error)
+        throw new Error(data.error)
     return data.price
 }
 
@@ -42,7 +43,8 @@ export async function analyzeFile(path: string, inverted: boolean): Promise<Anal
         body: JSON.stringify({ path, inverted })
     })
     const data = await response.json() as { result: AnalysisResult | null, error?: string }
-    if(data.error) throw new Error(data.error)
+    if (data.error)
+        throw new Error(data.error)
     return data.result
 }
 
@@ -59,13 +61,16 @@ export async function startSession(command: string, pair: string, interval: stri
         body: JSON.stringify({ command, pair, interval, delay })
     })
     const data = await response.json() as { session?: Session, error?: string }
-    if(data.error) throw new Error(data.error)
-    if(!data.session) throw new Error('No session returned by server')
+    if (data.error)
+        throw new Error(data.error)
+    if (!data.session)
+        throw new Error('No session returned by server')
     return data.session
 }
 
 export async function stopSession(): Promise<void> {
     const response = await fetch(`${API_BASE}/api/session/stop`, { method: 'POST' })
     const data = await response.json() as { error?: string }
-    if(data.error) throw new Error(data.error)
+    if (data.error)
+        throw new Error(data.error)
 }
