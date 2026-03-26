@@ -162,6 +162,13 @@ bun run frontend:dev
 
 Open `http://localhost:3000` to use the web interface. The UI mirrors the CLI: analyze .ndjson files, check prices, and control simulate/write sessions.
 
+<details>
+<summary><b>Screenshot</b></summary>
+
+![Web UI screenshot](images/web_screenshot.jpeg)
+
+</details>
+
 ### Bruno API tests
 
 Requires a running server (`bun run server`):
