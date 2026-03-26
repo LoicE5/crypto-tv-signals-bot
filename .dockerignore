@@ -5,7 +5,8 @@ build/
 .git
 .github
 docker/volumes
-web/
+web/*
+!web/package.json
 test/
 bruno/
 *.md
