@@ -11,6 +11,7 @@ import {
     fetchSessionStatus,
     startSession,
     stopSession,
+    checkHealth,
     LOGS_STREAM_URL,
     type AnalysisResult,
     type Session
@@ -344,6 +345,10 @@ export default function Dashboard() {
     const [intervals, setIntervals] = useState<string[]>([])
 
     useEffect(() => {
+        checkHealth().then(failedUrl => {
+            if (failedUrl)
+                alert(`Server is not available: ${failedUrl}`)
+        })
         fetchIntervals().then(setIntervals).catch((fetchError: unknown) => console.warn('Could not fetch intervals:', fetchError))
     }, [])
 

@@ -74,3 +74,14 @@ export async function stopSession(): Promise<void> {
     if (data.error)
         throw new Error(data.error)
 }
+
+export async function checkHealth(): Promise<string | null> {
+    const url = `${API_BASE}/api/health`
+    try {
+        const res = await fetch(url)
+        if (!res.ok) return url
+        return null
+    } catch {
+        return url
+    }
+}
