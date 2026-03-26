@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.1 — 2026-03-26
+
+### Added
+- `PUPPETEER_NO_SANDBOX` env var now also propagated to `src/cli.ts` and `src/server.ts` (previously only in `src/index.ts`)
+
+### Changed
+- `docker/Dockerfile`: `PUPPETEER_NO_SANDBOX=true` moved to `ENV` instruction; `web/package.json` copied before `bun install` for proper workspace resolution
+- `docker:build` script: image tag updated from versioned to `latest`
+
+### Fixed
+- `.dockerignore`: `web/` directory excluded from Docker context to reduce image build size, but for package.json regarding workspace context.
+
 ## 1.3.0 — 2026-03-19
 
 ### Added
