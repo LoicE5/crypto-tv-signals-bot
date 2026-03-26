@@ -10,8 +10,5 @@ services:
     command: sh
     stdin_open: true
     tty: true
-    environment:
-      # Required for Chromium inside Docker (no user-namespace sandbox available)
-      - PUPPETEER_NO_SANDBOX=true
     volumes:
       - ./volumes/output:/app/output
