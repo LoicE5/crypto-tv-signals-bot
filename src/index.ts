@@ -4,6 +4,10 @@ import { getValueFromArgv, isArgv } from './tools'
 import { simulateLogger } from './logger'
 import puppeteer, { Browser } from "puppeteer"
 import { runCli } from './cli'
+import { createFuturesExchange } from './exchanges'
+import { toCcxtFuturesPair, startTrader, neutralize } from './trader'
+import type { TraderState } from './trader'
+import { initDatabase } from './database'
 
 const firstArgv = process.argv.at(2)
 
@@ -109,6 +113,85 @@ if(!firstArgv) {
         }
 
         await logJsonTable(browser, pair, interval, delay)
+    }
+
+    if(firstArgv === 'trade') {
+        // ── Read config from environment ──────────────────────────────────────
+        const exchangeId  = process.env.EXCHANGE ?? 'binance'
+        const marketType  = process.env.EXCHANGE_MARKET_TYPE ?? 'future'
+        const apiKey      = process.env.EXCHANGE_API_KEY
+        const apiSecret   = process.env.EXCHANGE_API_SECRET
+        const tvPair      = process.env.TRADE_PAIR
+        const interval    = process.env.TRADE_INTERVAL ?? '1m'
+        const amount      = Number(process.env.TRADE_AMOUNT ?? 100)
+        const delay       = Number(process.env.TRADE_DELAY ?? 60)
+        const leverage    = Math.min(Number(process.env.TRADE_LEVERAGE ?? 2), 2)
+        const maxDrawdown = Number(process.env.TRADE_MAX_DRAWDOWN ?? 25)
+
+        if(!apiKey || !apiSecret) {
+            console.error('EXCHANGE_API_KEY and EXCHANGE_API_SECRET must be set in .env')
+            await browser.close()
+            process.exit(1)
+        }
+        if(!tvPair) {
+            console.error('TRADE_PAIR must be set in .env (e.g. BTCUSDT)')
+            await browser.close()
+            process.exit(1)
+        }
+        if(!validIntervals.has(interval)) {
+            console.error(`Invalid TRADE_INTERVAL "${interval}". Allowed: ${[...validIntervals].join(', ')}`)
+            await browser.close()
+            process.exit(1)
+        }
+        if(isNaN(amount) || amount <= 0) {
+            console.error('TRADE_AMOUNT must be a positive number')
+            await browser.close()
+            process.exit(1)
+        }
+
+        const ccxtPair = toCcxtFuturesPair(tvPair)
+        console.log(`[trade] Exchange: ${exchangeId} (${marketType}) | Pair: ${tvPair} → ${ccxtPair}`)
+
+        const exchange = createFuturesExchange(exchangeId, marketType, apiKey, apiSecret)
+        const db = await initDatabase()
+
+        let traderState: TraderState | undefined
+        let shuttingDown = false
+
+        // ── Shared cleanup — neutralize position then exit ─────────────────────
+        const cleanup = async (exitCode: number, reason: string): Promise<void> => {
+            if(shuttingDown) return
+            shuttingDown = true
+            process.stdout.write('\n')
+            console.log(`[trade] Shutting down (${reason})…`)
+            await db.flush()
+            if(traderState) await neutralize(exchange, ccxtPair, traderState, db, reason)
+            await db.close()
+            await browser.close()
+            process.exit(exitCode)
+        }
+
+        // Replace the generic SIGINT registered above with a neutralize-aware one
+        process.removeAllListeners('SIGINT')
+        process.on('SIGINT',  () => { cleanup(0, 'SIGINT').catch(console.error) })
+        process.on('SIGTERM', () => { cleanup(0, 'SIGTERM').catch(console.error) })
+        process.on('uncaughtException', (err) => {
+            db.writeError({ type: 'uncaught', message: String(err), position: traderState?.position, timestamp: Date.now() }).catch(() => {})
+            cleanup(1, `uncaughtException: ${err}`).catch(console.error)
+        })
+        process.on('unhandledRejection', (reason) => {
+            db.writeError({ type: 'unhandled', message: String(reason), position: traderState?.position, timestamp: Date.now() }).catch(() => {})
+            cleanup(1, `unhandledRejection: ${reason}`).catch(console.error)
+        })
+
+        // ── Start trading loop ─────────────────────────────────────────────────
+        traderState = await startTrader(
+            browser,
+            exchange,
+            { tvPair, ccxtPair, interval, amount, leverage, delay, maxDrawdownPct: maxDrawdown, exchangeId },
+            db,
+            async (reason) => cleanup(1, reason)
+        )
     }
 
 } // end else (CLI argument mode)

@@ -27,6 +27,6 @@ RUN bun install --production --frozen-lockfile
 COPY src/ ./src/
 COPY tsconfig.json ./
 
-RUN mkdir -p ./output
+RUN mkdir -p ./output ./data
 
 CMD ["bun", "src/index.ts"]

@@ -12,3 +12,29 @@ services:
     tty: true
     volumes:
       - ./volumes/output:/app/output
+
+  trader:
+    # ── Automated live trading service ──────────────────────────────────────
+    # Usage:  docker compose up trader -d
+    # Stop:   docker compose stop trader   (sends SIGTERM → neutralizes → exits)
+    # Logs:   docker compose logs -f trader
+    #
+    # VPS recommendation (best performance/price, 2026):
+    #   Hetzner CX22  — 2 vCPU (AMD) / 4 GB RAM / 40 GB SSD / ~€3.79/mo
+    #   Hetzner CAX11 — 2 vCPU (ARM64) / 4 GB RAM / ~€3.79/mo (slightly faster per €)
+    #   Pick datacenter closest to your exchange:
+    #     Binance  → Frankfurt (EU) or Singapore (Asia)
+    #     Bybit    → Frankfurt (EU) or Singapore (Asia)
+    #     OKX      → Singapore
+    #   Alternatives: Vultr $6/mo (32+ locations), Contabo $3.96/mo (large disk, heavy oversell)
+    image: loice5/crypto-tv-signals-bot:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: ["bun", "src/index.ts", "trade"]
+    env_file: ../.env
+    restart: on-failure        # crash → restart; clean neutralized exit stays stopped
+    stop_grace_period: 30s     # give neutralize() time to close position before SIGKILL
+    volumes:
+      - ./volumes/output:/app/output
+      - ./volumes/data:/app/data    # persists local SQLite DB across container restarts

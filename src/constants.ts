@@ -11,4 +11,4 @@ export const EXCHANGE_FEES: Record<string, number> = {
     bitfinex: 0.002
 }
 
-export const validCommands = new Set(['analyze', 'simulate', 'write', 'log'])
+export const validCommands = new Set(['analyze', 'simulate', 'write', 'log', 'trade'])
