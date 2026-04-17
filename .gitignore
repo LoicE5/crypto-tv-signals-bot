@@ -8,3 +8,5 @@ PROMPT.md
 REPORT.md
 docker/volumes/output/*
 !docker/volumes/output/.gitkeep
+temp/
+tmp/
