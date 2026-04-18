@@ -106,7 +106,32 @@ bun start analyze --path=./output/BTCUSDT_1m_14-3-2026.ndjson --amount=100
 
 # With a 0.5 ETH investment per trade for a LTC/ETH pair
 bun start analyze --path=./output/LTCETH_1m_14-3-2026.ndjson --amount=0.5
+
+# Override the default exchange fee (0.1% taker on Binance) — e.g. VIP tier at 0.05%
+bun start analyze --path=./output/BTCUSDT_1m_14-3-2026.ndjson --fee=0.0005
+
+# Add 5 bps per leg of slippage (recommended for realistic backtests)
+bun start analyze --path=./output/BTCUSDT_1m_14-3-2026.ndjson --slippage=0.0005
 ```
+
+#### Estimating slippage
+
+The `--slippage` flag charges a per-leg execution cost on top of `--fee`,
+mimicking the price impact of crossing the spread or walking the book.
+Sensible starting values for **market orders** of small size on Binance spot:
+
+| Pair tier                         | Suggested `--slippage` (per leg) |
+|-----------------------------------|----------------------------------|
+| BTC, ETH (top liquidity)          | `0.0001` – `0.0003`              |
+| BNB, SOL, XRP (top-20 alts)       | `0.0003` – `0.0008`              |
+| Lower-liquidity alts              | `0.001`+                          |
+| Order size > $100k or thin books  | scale up — measure your fills    |
+
+For a more rigorous estimate, record top-of-book bid/ask alongside the last
+price during `write`, then use `(ask − bid) / 2 / mid` as the realised
+half-spread per leg. For institutional-size orders, simulate consuming the
+real order book via `exchange.fetchOrderBook(pair)` instead of using a flat
+rate.
 
 ---
 
@@ -120,6 +145,8 @@ bun start analyze --path=./output/LTCETH_1m_14-3-2026.ndjson --amount=0.5
 | `--path` | analyze | Path to a `.ndjson` file to analyze | Any valid file path | required |
 | `--inverted` | analyze | Invert all positions (short on BUY, long on SELL) | flag or `=true` | `false` |
 | `--amount` | analyze | Investment per trade in quote currency (e.g. USDT for BTCUSDT, ETH for CAKEETH, BTC for BCHBTC). Profits are scaled accordingly; `var` becomes total profit as % of this amount. When omitted, profits are per 1 unit of base currency. | Any positive number | omitted |
+| `--fee` | analyze | Override the per-leg taker fee. Applied on both entry and exit. | Decimal in `[0, 1)` — e.g. `0.001` for 0.1% | exchange default (Binance: `0.001`) |
+| `--slippage` | analyze | Per-leg execution slippage. Added to `--fee` on each leg of every trade. See [Estimating slippage](#estimating-slippage). | Decimal in `[0, 1)` — e.g. `0.0005` for 5 bps | `0` |
 
 ---
 

@@ -23,6 +23,10 @@ if(!firstArgv) {
         const inverted = isArgv("--inverted", process.argv)
         const amountStr = getValueFromArgv("--amount", process.argv)
         const amount = amountStr !== null ? Number(amountStr) : undefined
+        const feeStr = getValueFromArgv("--fee", process.argv)
+        const fee = feeStr !== null ? Number(feeStr) : undefined
+        const slippageStr = getValueFromArgv("--slippage", process.argv)
+        const slippage = slippageStr !== null ? Number(slippageStr) : 0
 
         if(!path) {
             console.error("--path is required for the analyze command")
@@ -34,8 +38,18 @@ if(!firstArgv) {
             process.exit(1)
         }
 
+        if(fee !== undefined && (isNaN(fee) || fee < 0 || fee >= 1)) {
+            console.error("--fee must be a decimal in [0, 1) — e.g. 0.001 for 0.1% per leg")
+            process.exit(1)
+        }
+
+        if(isNaN(slippage) || slippage < 0 || slippage >= 1) {
+            console.error("--slippage must be a decimal in [0, 1) — e.g. 0.0005 for 5 bps per leg")
+            process.exit(1)
+        }
+
         try {
-            console.info(await analyseJsonTable(path, inverted, undefined, amount))
+            console.info(await analyseJsonTable(path, inverted, fee, amount, slippage))
         } catch(error: unknown) {
             console.error(`Failed to analyze file at "${path}": ${error}`)
             process.exit(1)

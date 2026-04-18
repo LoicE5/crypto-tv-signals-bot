@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- `analyseJsonTable`: new `slippageRate` parameter (per-leg, decimal, default `0`) added on top of `feeRate` to model real execution cost.
+- CLI: `--fee` and `--slippage` flags for the `analyze` command. Both are validated to `[0, 1)`.
+- Tests: regression test for the inverted-mode fee bug; new test covering slippage on top of fees.
+- README: documentation for `--fee`, `--slippage`, and a "Estimating slippage" section with per-tier guidance.
+
+### Fixed
+- **`--inverted` mode no longer adds fees back as profit.** Previously, `calculateSignalProfit` returned `delta - fee`, then the result was multiplied by `-1` for inverted mode, flipping the fee from a debit to a credit. Each inverted trade was therefore overstated by ~`2 × feeRate × (entry+exit)` (≈ 0.2% of notional per round-trip on Binance, doubled for `STRONG` signals). Now the position direction is flipped *before* costs are deducted, so fees and slippage remain a debit in both modes.
+
 ## 1.3.1 — 2026-03-26
 
 ### Added
