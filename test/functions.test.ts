@@ -258,6 +258,50 @@ describe("analyseJsonTable", () => {
         expect(result.sum).toBeCloseTo(24.565, 5)
     })
 
+    it("still deducts fees as a cost when inverted=true (regression: inverted sign-flip bug)", async () => {
+        // feeRate=0.001, inverted=true. Position directions flip but fees remain a DEBIT.
+        // BUY: firstPrice=90, lastPrice=110
+        //   fee = 0.001*(90+110) = 0.2
+        //   inverted directional delta = -(110-90) = -20
+        //   profit = -20 - 0.2 = -20.2
+        // EOF SELL: firstPrice=120, lastPrice=115
+        //   fee = 0.001*(120+115) = 0.235
+        //   inverted directional delta = -(115-120) = 5  (then the SELL case negates it: -5)
+        //   profit = -(-(115-120)) - 0.235 = -5 - 0.235 = -5.235
+        writeTestJsonc([
+            { pair: "BTCUSDT", interval: "1m", unix_time: 1000, price: 90,  signal: "BUY" },
+            { pair: "BTCUSDT", interval: "1m", unix_time: 2000, price: 100, signal: "BUY" },
+            { pair: "BTCUSDT", interval: "1m", unix_time: 3000, price: 110, signal: "BUY" },
+            { pair: "BTCUSDT", interval: "1m", unix_time: 4000, price: 120, signal: "SELL" },
+            { pair: "BTCUSDT", interval: "1m", unix_time: 5000, price: 115, signal: "SELL" }
+        ])
+        const result = await analyseJsonTable(TEST_JSONC_FILE, true, 0.001) as { profit_per_transaction: number[], sum: number, var: string }
+        expect(result).toBeDefined()
+        expect(result.profit_per_transaction.at(0)).toBeCloseTo(-20.2, 5)
+        expect(result.profit_per_transaction.at(1)).toBeCloseTo(-5.235, 5)
+        expect(result.sum).toBeCloseTo(-25.435, 5)
+    })
+
+    it("adds slippage on top of fees as a per-leg cost", async () => {
+        // feeRate=0.001, slippageRate=0.0005 → total per-leg cost 0.0015
+        // BUY: firstPrice=90, lastPrice=110
+        //   cost = 0.0015*(90+110) = 0.3 → profit = 20-0.3 = 19.7
+        // EOF SELL: firstPrice=120, lastPrice=115
+        //   cost = 0.0015*(120+115) = 0.3525 → profit = 5-0.3525 = 4.6475
+        writeTestJsonc([
+            { pair: "BTCUSDT", interval: "1m", unix_time: 1000, price: 90,  signal: "BUY" },
+            { pair: "BTCUSDT", interval: "1m", unix_time: 2000, price: 100, signal: "BUY" },
+            { pair: "BTCUSDT", interval: "1m", unix_time: 3000, price: 110, signal: "BUY" },
+            { pair: "BTCUSDT", interval: "1m", unix_time: 4000, price: 120, signal: "SELL" },
+            { pair: "BTCUSDT", interval: "1m", unix_time: 5000, price: 115, signal: "SELL" }
+        ])
+        const result = await analyseJsonTable(TEST_JSONC_FILE, false, 0.001, undefined, 0.0005) as { profit_per_transaction: number[], sum: number, var: string }
+        expect(result).toBeDefined()
+        expect(result.profit_per_transaction.at(0)).toBeCloseTo(19.7, 5)
+        expect(result.profit_per_transaction.at(1)).toBeCloseTo(4.6475, 5)
+        expect(result.sum).toBeCloseTo(24.3475, 5)
+    })
+
     it("throws when the file does not exist", async () => {
         await expect(analyseJsonTable("/nonexistent/file.jsonc")).rejects.toThrow()
     })

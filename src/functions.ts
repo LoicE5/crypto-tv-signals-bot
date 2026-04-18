@@ -106,17 +106,30 @@ export async function logJsonTable(browser: Browser, pair: string, interval: str
     }, delay * 1000)
 }
 
-// Computes net profit for a completed signal run, after subtracting round-trip fees.
-// feeRate applies on both entry and exit, scaled by position leverage.
-function calculateSignalProfit(signal: SignalValue | undefined, firstPrice: number, lastPrice: number, feeRate: number): number {
-    const delta = lastPrice - firstPrice
-    const baseFee = feeRate * (firstPrice + lastPrice)
+// Computes net profit for a completed signal run, after subtracting round-trip
+// execution costs (exchange fee + slippage). Both are expressed as per-leg
+// decimal rates applied to price, so the round-trip cost is
+// (feeRate + slippageRate) * (firstPrice + lastPrice).
+// When inverted=true, the *direction* of the position is flipped BEFORE costs
+// are deducted — so costs remain a debit in both modes (fix for the inverted
+// sign-flip bug where fees were previously added back on inversion).
+// STRONG signals represent 2x leverage: both P&L and costs are doubled.
+function calculateSignalProfit(
+    signal: SignalValue | undefined,
+    firstPrice: number,
+    lastPrice: number,
+    feeRate: number,
+    slippageRate: number = 0,
+    inverted: boolean = false
+): number {
+    const directionalDelta = (lastPrice - firstPrice) * (inverted ? -1 : 1)
+    const roundTripCost = (feeRate + slippageRate) * (firstPrice + lastPrice)
     switch(signal) {
-        case 'BUY':        return delta - baseFee
-        case 'STRONG BUY': return (delta - baseFee) * 2
+        case 'BUY':        return  directionalDelta - roundTripCost
+        case 'STRONG BUY': return (directionalDelta - roundTripCost) * 2
         case 'NEUTRAL':    return 0
-        case 'SELL':       return -delta - baseFee
-        case 'STRONG SELL':return (-delta - baseFee) * 2
+        case 'SELL':       return -directionalDelta - roundTripCost
+        case 'STRONG SELL':return (-directionalDelta - roundTripCost) * 2
         default:           return 0
     }
 }
@@ -128,14 +141,25 @@ function calculateSignalProfit(signal: SignalValue | undefined, firstPrice: numb
  *   SELL → short x1 | STRONG SELL → short x2
  * Open positions at end of file are closed at the last available price.
  * @param pathToNdjsonFile Path to the .ndjson file to analyze
- * @param inverted If true, all positions are reversed (short on BUY, long on SELL)
- * @param feeRate Round-trip taker fee per trade as a decimal (default: exchange fee for configured exchange)
+ * @param inverted If true, all positions are reversed (short on BUY, long on SELL).
+ *                 Costs (fees + slippage) remain a debit in both modes.
+ * @param feeRate Taker fee per leg as a decimal — applied on both entry and exit
+ *                (default: exchange fee for configured exchange, e.g. 0.001 = 0.1% on Binance)
  * @param amount If provided, profits are scaled to this quote-currency investment per trade (e.g. 100 USDT for BTCUSDT).
  *               The var field then represents total profit as a percentage of the amount.
  *               When omitted, profits are expressed per 1 unit of base currency.
+ * @param slippageRate Execution slippage per leg as a decimal (default: 0). Added to feeRate
+ *                     on each leg. Typical values: 0.0001–0.0003 for BTC/ETH on Binance spot
+ *                     with small size, 0.0005+ for lower-liquidity alts or larger orders.
  * @returns AnalysisResult with per-transaction profits, total sum and % variation, or undefined if insufficient data
  */
-export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boolean = false, feeRate: number = EXCHANGE_FEES[defaultExchange.id] ?? 0, amount: number | undefined = undefined): Promise<AnalysisResult | undefined> {
+export async function analyseJsonTable(
+    pathToNdjsonFile: string,
+    inverted: boolean = false,
+    feeRate: number = EXCHANGE_FEES[defaultExchange.id] ?? 0,
+    amount: number | undefined = undefined,
+    slippageRate: number = 0
+): Promise<AnalysisResult | undefined> {
 
     const data = await readOutputFile(pathToNdjsonFile) as Array<TickerRow>
 
@@ -163,7 +187,7 @@ export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boole
             continue
 
         const lastPrice = row.price
-        const rawProfit = calculateSignalProfit(row.signal, firstPrice, lastPrice, feeRate)
+        const rawProfit = calculateSignalProfit(row.signal, firstPrice, lastPrice, feeRate, slippageRate, inverted)
         globalProfit.push(amount !== undefined ? rawProfit * (amount / firstPrice) : rawProfit)
         firstPrice = nextRow.price
         currentSignal = nextRow.signal
@@ -178,7 +202,7 @@ export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boole
         currentSignal !== 'ERROR' &&
         lastRow?.price !== undefined
     ) {
-        const rawProfit = calculateSignalProfit(currentSignal, firstPrice, lastRow.price, feeRate)
+        const rawProfit = calculateSignalProfit(currentSignal, firstPrice, lastRow.price, feeRate, slippageRate, inverted)
         globalProfit.push(amount !== undefined ? rawProfit * (amount / firstPrice) : rawProfit)
     }
 
@@ -188,16 +212,16 @@ export async function analyseJsonTable(pathToNdjsonFile: string, inverted: boole
     }
 
     const profitSum = globalProfit.reduce((accumulator: number, currentValue: number): number => accumulator + currentValue)
-    
+
     if (absoluteFirstPrice === undefined)
         return undefined
-    
+
     const profitVariation = (profitSum / (amount ?? absoluteFirstPrice)) * 100
 
     const result: AnalysisResult = {
-        profit_per_transaction: inverted ? globalProfit.map(profit => -1 * profit) : globalProfit,
-        sum: inverted ? -1 * profitSum : profitSum,
-        var: (inverted ? -1 * profitVariation : profitVariation) + '%'
+        profit_per_transaction: globalProfit,
+        sum: profitSum,
+        var: profitVariation + '%'
     }
 
     return result
