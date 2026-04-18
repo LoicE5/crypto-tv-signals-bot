@@ -12,6 +12,7 @@
 ### Fixed
 - **`--inverted` mode no longer adds fees back as profit.** Previously, `calculateSignalProfit` returned `delta - fee`, then `analyseJsonTable` multiplied the per-trade result by `-1` for inverted mode, flipping the fee from a debit to a credit. Each inverted trade was therefore overstated by ~`2 × feeRate × (entry+exit)` (≈ 0.2% of notional per round-trip at default Binance fees, doubled for `STRONG` signals). Position direction is now flipped on `delta` *before* costs are deducted, so fees and slippage remain a debit regardless of mode.
   - **User impact**: inverted-mode `sum` and `var` will be **lower** than in 1.3.x for any analysis run with non-zero fees. Non-inverted runs are bit-for-bit unchanged. Re-run any prior `--inverted` analysis to get accurate numbers.
+- `tsconfig.json`: removed vestigial `src/server.ts` exclusion. The exclusion dated from when `server.ts` lived at the project root (outside `rootDir: "./src"`); it became dead config when the file moved into `src/` in commit `f20030f` but was never cleaned up. The leftover exclusion broke `bun lint` because `@typescript-eslint/parser` (configured with `parserOptions.project: "./tsconfig.json"`) refused to parse a file the project claimed to exclude. `tsc --noEmit` and `bun build --compile` are unaffected (build only follows imports from `src/index.ts`).
 
 ### Changed
 - `calculateSignalProfit` signature extended with `slippageRate` and `inverted` parameters (private helper — no public API impact).
