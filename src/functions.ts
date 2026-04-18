@@ -212,10 +212,10 @@ export async function analyseJsonTable(
     }
 
     const profitSum = globalProfit.reduce((accumulator: number, currentValue: number): number => accumulator + currentValue)
-    
+
     if (absoluteFirstPrice === undefined)
         return undefined
-    
+
     const profitVariation = (profitSum / (amount ?? absoluteFirstPrice)) * 100
 
     const result: AnalysisResult = {
